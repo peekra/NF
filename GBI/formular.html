@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Formular</title>
+    <link rel='stylesheet' href='main.css'>
+</head>
+<body>
+
+ <form action="/ziel_url" method="POST">
+
+    <label "vorname"> Vorname:</label>
+    <input type="text" id="vorname" name="vorname" placeholder="Dein Vorname" required>
+
+    <textarea id="nachricht" name="nachricht" placeholder="Deine Nachricht"></textarea>
+    <br>
+    <input type="submit" value="Formular absenden">
+  
+
+    <select id="land" name="land">
+  <option value="de">Deutschland</option>
+  <option value="at">Österreich</option>
+  <option value="ch">Schweiz</option>
+    </select>
+
+    <br>
+<input type="checkbox" id="newsletter" name="newsletter">
+<label for="newsletter">Newsletter abonnieren</label>
+<br>
+<input type="radio" id="v1" name="bedingungen" value="akzeptiert">
+<label for="agb">Variante 1</label>
+<br>
+<input type="radio" id="v2" name="bedingungen" value="akzeptiert">
+<label for="agb">Variante 2</label>
+
+
+<label for="geheim">Geheimwort:</label>
+    <input type="password" id="geheim" name="geheim"><br><br>
+</form>
+
+ <p> Zurück zum <a href="index.html"> Home page.</a> </p>
+</body>
+</html>
