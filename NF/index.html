@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Normalisierungs-Labor · 1NF bis 5NF selbst üben</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --paper:#F5F6F8;--surface:#FFFFFF;--ink:#1A1F2E;--ink-soft:#4C5366;--ink-faint:#878D9C;
+    --line:#E3E6EC;--line-soft:#EEF0F4;
+    --fdisp:'Space Grotesk',system-ui,sans-serif;--fbody:'Newsreader',Georgia,serif;--fmono:'JetBrains Mono',ui-monospace,monospace;
+    --blue:#2563EB;--teal:#0891B2;--violet:#7C3AED;--amber:#D97706;--rose:#DB2777;--green:#16A34A;--red:#D4423C;
+    --r:14px;--rs:9px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--fbody);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  ::selection{background:#1A1F2E;color:#fff}
+  h1,h2,h3,h4,.eyebrow,button,.tab,.label,.mono,.chip,th,.pill{font-family:var(--fdisp)}
+  .mono,code,.attr,.fd,td.d{font-family:var(--fmono)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+
+  /* header */
+  header{padding:52px 0 26px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin:0 0 16px}
+  h1{font-family:var(--fdisp);font-weight:700;font-size:clamp(32px,5.5vw,52px);line-height:1.04;letter-spacing:-.02em;margin:0 0 16px}
+  h1 em{font-style:normal;color:var(--violet)}
+  header p{font-size:18px;color:var(--ink-soft);max-width:64ch;margin:0}
+
+  /* tabs */
+  .tabs{display:flex;gap:8px;margin:30px 0 0;flex-wrap:wrap;position:sticky;top:0;background:var(--paper);
+    padding:14px 0;z-index:30;border-bottom:1px solid var(--line)}
+  .tab{font-size:15px;font-weight:600;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);
+    border-radius:30px;padding:10px 20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:9px}
+  .tab:hover{border-color:var(--ink-faint)}
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .tab .ic{font-size:16px}
+
+  .panel{display:none;padding:34px 0 100px}
+  .panel.active{display:block}
+
+  h2{font-family:var(--fdisp);font-weight:700;font-size:26px;letter-spacing:-.01em;margin:0 0 8px}
+  .sub{color:var(--ink-soft);margin:0 0 22px;max-width:70ch}
+  h3{font-family:var(--fdisp);font-weight:600;font-size:18px;margin:30px 0 10px}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;margin:16px 0}
+  .card-h{font-family:var(--fdisp);font-weight:600;font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .step-n{font-family:var(--fdisp);font-weight:700;font-size:12px;color:#fff;background:var(--violet);
+    width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;flex:none}
+
+  .btn{font-family:var(--fdisp);font-weight:600;font-size:14px;border-radius:var(--rs);padding:10px 18px;
+    cursor:pointer;border:1.5px solid transparent;transition:all .15s}
+  .btn-pri{background:var(--violet);color:#fff}
+  .btn-pri:hover{background:#6A2BD0}
+  .btn-g{background:var(--surface);border-color:var(--line);color:var(--ink-soft)}
+  .btn-g:hover{border-color:var(--ink-faint)}
+  .btn-sm{padding:7px 13px;font-size:13px}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  input[type=text]{font-family:var(--fmono);font-size:14px;border:1.5px solid var(--line);border-radius:var(--rs);
+    padding:10px 13px;background:var(--surface);color:var(--ink);width:100%}
+  input[type=text]:focus{outline:none;border-color:var(--violet)}
+  .hint{font-size:13.5px;color:var(--ink-faint);margin:6px 0 0}
+
+  /* chips */
+  .chip{font-family:var(--fmono);font-size:13px;border:1.5px solid var(--line);background:var(--surface);
+    color:var(--ink-soft);border-radius:8px;padding:6px 11px;cursor:pointer;transition:all .13s;display:inline-flex;align-items:center;gap:7px}
+  .chip:hover{border-color:var(--ink-faint)}
+  .chip.sel{border-color:var(--violet);background:color-mix(in srgb,var(--violet) 10%,#fff);color:color-mix(in srgb,var(--violet) 78%,#000);font-weight:500}
+  .chip.pk{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,#fff);color:var(--blue);font-weight:600}
+  .chip .x{font-family:var(--fdisp);color:var(--ink-faint);font-weight:700;cursor:pointer;font-size:15px;line-height:1}
+  .chip .x:hover{color:var(--red)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+
+  /* FD list */
+  .fdrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft);flex-wrap:wrap}
+  .fdrow:first-child{border-top:none}
+  .fdrow .det{background:color-mix(in srgb,var(--violet) 11%,#fff);color:color-mix(in srgb,var(--violet) 75%,#000);
+    padding:4px 10px;border-radius:7px;font-family:var(--fmono);font-size:13px;font-weight:500}
+  .fdrow .arr{color:var(--ink-faint);font-family:var(--fdisp);font-weight:700}
+  .fdrow .dep{font-family:var(--fmono);font-size:13px;color:var(--ink-soft)}
+  .fdrow .del{margin-left:auto;color:var(--ink-faint);cursor:pointer;font-family:var(--fdisp);font-weight:700;font-size:16px}
+  .fdrow .del:hover{color:var(--red)}
+  .fdrow.sug{background:color-mix(in srgb,var(--amber) 7%,#fff);border-radius:8px;padding:9px 12px;border:1px dashed color-mix(in srgb,var(--amber) 35%,var(--line))}
+
+  /* target NF buttons */
+  .nfbtns{display:flex;gap:7px;flex-wrap:wrap}
+  .nfbtn{font-family:var(--fdisp);font-weight:600;font-size:14px;border:1.5px solid var(--line);background:var(--surface);
+    color:var(--ink-soft);border-radius:9px;padding:9px 15px;cursor:pointer;transition:all .14s}
+  .nfbtn:hover{border-color:var(--ink-faint)}
+  .nfbtn.on{color:#fff}
+
+  /* relations builder */
+  .relgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px}
+  .relcard{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .14s}
+  .relcard.sel{border-color:var(--violet)}
+  .relcard .rh{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .relcard .rh input{font-family:var(--fdisp);font-weight:700;font-size:15px;border:none;background:transparent;padding:2px 4px;color:var(--ink);width:100%}
+  .relcard .rh input:focus{outline:1px solid var(--line);border-radius:5px}
+  .relcard .rdel{color:var(--ink-faint);cursor:pointer;font-family:var(--fdisp);font-weight:700;flex:none}
+  .relcard .rdel:hover{color:var(--red)}
+  .relcard .empty{font-family:var(--fbody);font-size:13px;color:var(--ink-faint);font-style:italic}
+  .relcard.sel .empty::after{content:" ← Attribut oben anklicken"}
+
+  /* report */
+  .report{margin-top:18px}
+  .verdict-big{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:var(--r);margin-bottom:16px;border:1.5px solid}
+  .verdict-big.ok{background:color-mix(in srgb,var(--green) 7%,#fff);border-color:color-mix(in srgb,var(--green) 30%,var(--line))}
+  .verdict-big.bad{background:color-mix(in srgb,var(--red) 6%,#fff);border-color:color-mix(in srgb,var(--red) 28%,var(--line))}
+  .verdict-big .mk{font-family:var(--fdisp);font-weight:700;font-size:26px;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff}
+  .verdict-big.ok .mk{background:var(--green)}
+  .verdict-big.bad .mk{background:var(--red)}
+  .verdict-big .t{font-family:var(--fdisp);font-weight:700;font-size:19px}
+  .verdict-big .s{font-size:14.5px;color:var(--ink-soft)}
+  .highest{font-family:var(--fmono);font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:6px 14px;display:inline-block;margin-bottom:14px}
+
+  .relreport{background:var(--surface);border:1px solid var(--line);border-radius:var(--rs);padding:16px 18px;margin:10px 0;border-left:4px solid var(--c,var(--line))}
+  .relreport .rname{font-family:var(--fdisp);font-weight:700;font-size:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .relreport .rname .v{font-size:18px}
+  .relreport .meta{font-family:var(--fmono);font-size:12.5px;color:var(--ink-faint);margin:6px 0 2px}
+  .relreport .viol{font-size:14px;color:var(--ink-soft);margin:8px 0 0;padding:10px 12px;background:color-mix(in srgb,var(--red) 5%,#fff);border-radius:7px;border:1px solid color-mix(in srgb,var(--red) 18%,var(--line))}
+  .relreport .viol b{color:var(--ink);font-family:var(--fmono)}
+  .relreport .good-note{font-size:14px;color:var(--green);margin-top:6px}
+  .badge{font-family:var(--fdisp);font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px}
+  .badge.ok{background:#E5F4EA;color:#15803D}.badge.bad{background:#FCE9E9;color:#B4231F}.badge.warn{background:#FBF0DC;color:#B45309}
+  .infoline{font-size:14px;color:var(--ink-soft);padding:11px 14px;background:color-mix(in srgb,var(--blue) 5%,#fff);border:1px solid color-mix(in srgb,var(--blue) 18%,var(--line));border-radius:var(--rs);margin:10px 0}
+
+  /* mode switch */
+  .modesw{display:inline-flex;background:var(--line-soft);border-radius:30px;padding:4px;gap:4px;margin-bottom:18px}
+  .modesw button{font-family:var(--fdisp);font-weight:600;font-size:13.5px;border:none;background:transparent;color:var(--ink-soft);padding:8px 16px;border-radius:24px;cursor:pointer}
+  .modesw button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  .drop{border:2px dashed var(--line);border-radius:var(--r);padding:30px;text-align:center;background:var(--surface);transition:all .15s;cursor:pointer}
+  .drop:hover,.drop.over{border-color:var(--violet);background:color-mix(in srgb,var(--violet) 4%,#fff)}
+  .drop .big{font-family:var(--fdisp);font-weight:600;font-size:16px;margin-bottom:4px}
+  .drop .sm{font-size:13.5px;color:var(--ink-faint)}
+
+  .tbl-prev{overflow-x:auto;margin-top:12px}
+  table.prev{border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--rs);overflow:hidden}
+  table.prev th{background:#F0F2F6;padding:7px 11px;font-family:var(--fmono);font-weight:600;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.prev td{padding:6px 11px;font-family:var(--fmono);color:var(--ink-soft);border-bottom:1px solid var(--line-soft);white-space:nowrap}
+
+  /* ===== CANVAS / SANDBOX ===== */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .toolbar .sep{width:1px;height:26px;background:var(--line);margin:0 4px}
+  .toolbar .mode-ind{font-family:var(--fmono);font-size:12.5px;color:var(--ink-faint);margin-left:auto}
+  #canvas{position:relative;height:500px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    overflow:hidden;touch-action:none;
+    background-image:radial-gradient(circle,var(--line-soft) 1px,transparent 1px);background-size:22px 22px}
+  /* Pfeil-Ebene IMMER oben, damit Pfeilspitzen & Punkte ueber den Boxen sichtbar bleiben */
+  #edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+  .cnode{position:absolute;min-width:88px;background:#F6ECD9;border:1.5px solid #D8C29A;border-radius:8px;
+    padding:11px 16px;font-family:var(--fdisp);font-weight:600;font-size:15px;color:#5A4A2E;cursor:grab;
+    user-select:none;text-align:center;box-shadow:0 2px 6px -3px rgba(90,74,46,.4);white-space:nowrap;z-index:2}
+  .cnode span{outline:none}
+  .cnode.dragging{cursor:grabbing;box-shadow:0 8px 20px -6px rgba(90,74,46,.5);z-index:40}
+  .cnode.src{box-shadow:0 0 0 3px color-mix(in srgb,var(--violet) 50%,transparent)}
+  /* Schluessel-Block fuer zusammengesetzte Schluessel */
+  .cblock{position:absolute;background:#F1E6CF;border:2px solid #C9A85F;border-radius:12px;padding:9px;min-width:118px;
+    cursor:grab;user-select:none;box-shadow:0 3px 11px -4px rgba(90,74,46,.5);z-index:2}
+  .cblock.dragging{cursor:grabbing;z-index:40}
+  .cblock.src{box-shadow:0 0 0 3px color-mix(in srgb,var(--violet) 50%,transparent)}
+  .cblock-title{font-family:var(--fdisp);font-weight:700;font-size:11px;color:#7A6536;text-align:center;
+    text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px;cursor:grab;padding:2px 4px;border-radius:5px;outline:none}
+  .cfield{background:#FFFDF7;border:1.5px solid #D8C29A;border-radius:7px;padding:8px 14px;margin:5px 2px;
+    font-family:var(--fdisp);font-weight:600;font-size:14px;color:#5A4A2E;text-align:center;white-space:nowrap;cursor:grab}
+  .cfield span{outline:none}
+  .cfield.src{box-shadow:0 0 0 2px var(--violet);border-color:var(--violet)}
+  .cblock-add{font-family:var(--fdisp);font-weight:600;font-size:11px;color:#9C8550;text-align:center;cursor:pointer;
+    padding:3px;margin-top:2px;border-radius:5px}
+  .cblock-add:hover{background:#E7D8B6}
+  /* Pfeil-Modus: Hover zeigt Ursprung — Feld = einzelnes Attribut, Titel = ganzer Block */
+  #canvas.arrowmode{cursor:crosshair}
+  #canvas.arrowmode .cnode:hover{box-shadow:0 0 0 3px var(--violet)}
+  #canvas.arrowmode .cfield:hover{box-shadow:0 0 0 2px var(--violet);border-color:var(--violet)}
+  #canvas.arrowmode .cblock:has(.cblock-title:hover){box-shadow:0 0 0 3px var(--violet)}
+  #canvas.arrowmode .cblock-title,#canvas.arrowmode .cfield{cursor:crosshair}
+  .canvas-help{font-size:13.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6}
+  .canvas-help b{color:var(--ink);font-family:var(--fdisp)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--ink-soft)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .leg-dot{width:9px;height:9px;border-radius:50%;background:#3A3326;flex:none}
+  .leg-line{width:24px;height:0;border-top:2px solid #3A3326;flex:none}
+
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--ink-faint);font-size:13.5px}
+  .err{color:var(--red);font-size:13.5px;margin-top:8px;font-family:var(--fdisp);font-weight:500}
+
+  /* ===== NF-ERLERNEN (Lernmodul) ===== */
+  .L-nfbtns{display:flex;gap:7px;flex-wrap:wrap}
+  .L-nfbtn{font-family:var(--fdisp);font-weight:600;font-size:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink-soft);border-radius:9px;padding:9px 15px;cursor:pointer;transition:all .14s}
+  .L-nfbtn:hover{border-color:var(--ink-faint)}
+  .L-nfbtn.on{color:#fff}
+  .L-prev{overflow-x:auto;margin:12px 0}
+  table.L-tbl{border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--rs);overflow:hidden}
+  table.L-tbl th{background:#F0F2F6;padding:7px 11px;font-family:var(--fmono);font-weight:600;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.L-tbl td{padding:6px 11px;font-family:var(--fmono);color:var(--ink-soft);border-bottom:1px solid var(--line-soft);white-space:nowrap}
+  .L-badge{font-family:var(--fdisp);font-size:12px;font-weight:600;padding:4px 11px;border-radius:20px;display:inline-block}
+  .L-badge.ok{background:#E5F4EA;color:#15803D}
+  .L-badge.no{background:#FBE7DD;color:#B4231F}
+  .L-banner{font-size:14px;color:var(--ink);padding:12px 14px;background:color-mix(in srgb,var(--amber) 8%,#fff);border:1px solid color-mix(in srgb,var(--amber) 30%,var(--line));border-radius:var(--rs);margin:10px 0}
+  .L-banner b{font-family:var(--fdisp)}
+  .L-cols{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:8px}
+  @media(max-width:820px){.L-cols{grid-template-columns:1fr}}
+  .L-left,.L-right{min-width:0}
+  .L-coltitle{font-family:var(--fdisp);font-weight:700;font-size:15px;margin-bottom:4px;color:var(--ink)}
+  .L-detrow{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:12px;margin:10px 0;cursor:pointer;transition:border-color .14s}
+  .L-detrow.sel{border-color:var(--violet)}
+  .L-detrow .L-dethead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .L-detrow .L-detlabel{font-family:var(--fdisp);font-weight:600;font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.08em}
+  .L-detrow .L-detdel{margin-left:auto;color:var(--ink-faint);cursor:pointer;font-family:var(--fdisp);font-weight:700;font-size:15px}
+  .L-detrow .L-detdel:hover{color:var(--red)}
+  .L-detempty{font-size:12.5px;color:var(--ink-faint);font-style:italic}
+  .L-verdict{margin-top:9px;font-family:var(--fdisp);font-weight:600;font-size:13px;padding:6px 10px;border-radius:7px;display:inline-block}
+  .L-verdict.ja{background:#E5F4EA;color:#15803D}
+  .L-verdict.nein{background:#FBE7DD;color:#B4231F}
+  .L-sol{background:color-mix(in srgb,var(--violet) 4%,#fff);border:1px solid color-mix(in srgb,var(--violet) 18%,var(--line));border-radius:var(--r);padding:16px;margin:14px 0}
+  .L-sol h4{font-family:var(--fdisp);font-weight:600;font-size:14px;margin:0 0 6px;color:var(--violet)}
+  .L-sol .intro{font-size:14px;color:var(--ink-soft);margin:0 0 12px}
+  .L-viol{margin:9px 0;border-radius:8px;overflow:hidden;border:1px solid color-mix(in srgb,var(--red) 20%,var(--line))}
+  .L-viol .err{background:color-mix(in srgb,var(--red) 6%,#fff);padding:11px 13px;font-size:14px;color:var(--ink)}
+  .L-viol .err b{font-family:var(--fmono);background:#F0F2F6;padding:1px 5px;border-radius:4px}
+  .L-viol .fix{background:color-mix(in srgb,var(--green) 7%,#fff);padding:11px 13px;font-size:14px;color:var(--ink-soft);border-top:1px solid color-mix(in srgb,var(--green) 18%,var(--line))}
+  .L-viol .fl{font-family:var(--fdisp);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:4px}
+  .L-viol .err .fl{color:#B4231F}.L-viol .fix .fl{color:#15803D}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Datenbanken · Übungswerkzeug</p>
+    <h1>Normalisierungs-<em>Labor</em></h1>
+    <p>Zwei Werkzeuge zum selbst Üben: Zeichne Abhängigkeitsdiagramme frei auf einer Fläche – und baue Zerlegungen, die das System gegen die funktionalen Abhängigkeiten prüft. Es sagt dir, in welcher Normalform deine Lösung ist und erklärt jede Verletzung.</p>
+
+    <div class="tabs">
+      <button class="tab active" data-panel="checker"><span class="ic">✓</span> Normalform-Prüfer</button>
+      <button class="tab" data-panel="sandbox"><span class="ic">✱</span> Diagramm-Fläche</button>
+      <button class="tab" data-panel="learn"><span class="ic">★</span> NF-erlernen</button>
+      <button class="tab" data-panel="nfstufe"><span class="ic">◆</span> NF – Stufe für Stufe</button>
+    </div>
+  </header>
+
+  <!-- ============================================================= -->
+  <!-- ===================== NORMALFORM-PRÜFER ====================== -->
+  <!-- ============================================================= -->
+  <section class="panel active" id="checker">
+    <h2>Normalform-Prüfer</h2>
+    <p class="sub">Gib die Spalten ein, lege die funktionalen Abhängigkeiten fest, verteile die Spalten auf Relationen – und lass prüfen. Die Logik kennt 1NF bis 5NF.</p>
+
+    <div class="modesw" role="tablist">
+      <button id="mode-simple" class="on" onclick="setMode('simple')">Einfach · Spalten eintippen</button>
+      <button id="mode-excel" onclick="setMode('excel')">Erweitert · Excel hochladen</button>
+    </div>
+
+    <!-- STEP 1: columns -->
+    <div class="card">
+      <div class="card-h"><span class="step-n">1</span> Spalten der Ausgangstabelle</div>
+      <div id="simpleInput">
+        <div class="row">
+          <input type="text" id="colInput" placeholder="z. B. BuchungsNr, GastID, Gastname, GastPLZ, GastOrt, ZimmerNr, ..." onkeydown="if(event.key==='Enter')addCols()">
+          <button class="btn btn-pri" onclick="addCols()">Übernehmen</button>
+        </div>
+        <p class="hint">Spaltennamen mit Komma trennen. Oder <a href="#" onclick="loadExample();return false" style="color:var(--violet)">Hotel-Beispiel laden</a>.</p>
+      </div>
+      <div id="excelInput" style="display:none">
+        <div class="drop" id="drop" onclick="document.getElementById('file').click()">
+          <div class="big">Excel- oder CSV-Datei hier ablegen</div>
+          <div class="sm">.xlsx / .xls / .csv — die Kopfzeile wird zu deinen Spalten. Liegen Daten vor, schlägt das System Abhängigkeiten vor.</div>
+        </div>
+        <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFile(this.files[0])">
+        <div id="fileErr" class="err"></div>
+        <div id="preview"></div>
+      </div>
+      <div id="colChips" class="chips" style="margin-top:14px"></div>
+    </div>
+
+    <!-- STEP 2: FDs -->
+    <div class="card" id="fdCard" style="display:none">
+      <div class="card-h"><span class="step-n">2</span> Funktionale Abhängigkeiten festlegen</div>
+      <p class="hint" style="margin-top:-6px">Normalformen hängen <b>nur</b> von den Abhängigkeiten ab. Wähle links die Determinante (was bestimmt), rechts die abhängigen Spalten.</p>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:start;margin:14px 0" id="fdBuilder">
+        <div>
+          <div class="label" style="font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Determinante</div>
+          <div class="chips" id="lhsChips"></div>
+        </div>
+        <div style="align-self:center;font-family:var(--fdisp);font-weight:700;font-size:22px;color:var(--ink-faint);padding-top:24px">→</div>
+        <div>
+          <div class="label" style="font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">bestimmt</div>
+          <div class="chips" id="rhsChips"></div>
+        </div>
+      </div>
+      <button class="btn btn-pri btn-sm" onclick="addFD()">+ Abhängigkeit hinzufügen</button>
+      <div id="sugBox"></div>
+      <h3 style="margin-top:22px;font-size:15px">Festgelegte Abhängigkeiten</h3>
+      <div id="fdList"></div>
+      <div id="keyInfo" class="infoline" style="display:none"></div>
+    </div>
+
+    <!-- STEP 3: target + decomposition -->
+    <div class="card" id="buildCard" style="display:none">
+      <div class="card-h"><span class="step-n">3</span> Zielnormalform &amp; Zerlegung bauen</div>
+      <p class="hint" style="margin-top:-6px">Wähle die Zielnormalform. Lege Relationen an und klicke oben Attribute an, um sie hinzuzufügen. In einer Relation: Attribut anklicken macht es zum <span style="color:var(--blue);font-weight:600">Schlüssel</span>, nochmal anklicken normal, ✕ entfernt es.</p>
+
+      <div style="margin:14px 0">
+        <div class="label" style="font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Zielnormalform</div>
+        <div class="nfbtns" id="nfbtns"></div>
+      </div>
+
+      <div class="label" style="font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 8px">Verfügbare Attribute (anklicken → zur gewählten Relation)</div>
+      <div class="chips" id="poolChips"></div>
+
+      <div class="row" style="margin:18px 0 0">
+        <button class="btn btn-g btn-sm" onclick="addRelation()">+ Relation</button>
+        <button class="btn btn-g btn-sm" onclick="autoSolve()">Musterlösung zeigen</button>
+        <button class="btn btn-g btn-sm" onclick="resetRelations()">Zerlegung leeren</button>
+      </div>
+      <div class="relgrid" id="relGrid"></div>
+
+      <div class="row" style="margin-top:20px">
+        <button class="btn btn-pri" onclick="runCheck()">Prüfen</button>
+      </div>
+      <div class="report" id="report"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- ===================== DIAGRAMM-FLÄCHE ======================== -->
+  <!-- ============================================================= -->
+  <section class="panel" id="sandbox">
+    <h2>Diagramm-Fläche</h2>
+    <p class="sub">Bau Abhängigkeitsdiagramme mit Attribut-Kästchen und Schlüssel-Blöcken für zusammengesetzte Schlüssel. Pfeile können vom ganzen Block oder von einzelnen Attributen ausgehen.</p>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-h"><span class="step-n">1</span> Ausgangstabelle laden <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">(optional — Attribute kannst du auch in Schritt 2 selbst anlegen)</span></div>
+      <p class="hint" style="margin-top:-2px">Lade eine Excel-/CSV-Tabelle hoch (Kopfzeile = Attribute; mit Daten werden die Abhängigkeiten automatisch abgeleitet) — oder lade das Hotel-Beispiel.</p>
+      <div class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-pri btn-sm" onclick="document.getElementById('dgFile').click()">Datei wählen</button>
+        <input type="file" id="dgFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="DGhandleFile(this.files[0])">
+        <span class="sm" id="dgFileName" style="color:var(--ink-faint)">keine Datei gewählt</span>
+        <span class="hint" style="margin:0 2px">·</span>
+        <a href="#" onclick="DGloadHotel();return false" style="color:var(--violet);font-weight:600">Hotel-Beispiel laden</a>
+      </div>
+      <div class="label" style="margin-top:18px">Oder Tabelle selbst eingeben</div>
+      <p class="hint" style="margin-top:-2px">Spalten und Zeilen befüllen, dann <b>„Inhalte übernehmen"</b> — die Tabelle wird wie ein Upload verarbeitet (Attribute + Daten + abgeleitete Abhängigkeiten). Nur mit echten Daten lässt sich die <b>5NF / Verbund-Abhängigkeit</b> korrekt prüfen.</p>
+      <div class="row" style="margin:6px 0;gap:8px"><button class="btn btn-g btn-sm" onclick="DGgridFromAttrs()">Spalten = aktuelle Attribute</button></div>
+      <div id="dgGridWrap" style="overflow-x:auto"></div>
+      <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" onclick="DGgridAddRow()">+ Zeile</button>
+        <button class="btn btn-g btn-sm" onclick="DGgridAddCol()">+ Spalte</button>
+        <button class="btn btn-pri btn-sm" onclick="DGgridApply()">Inhalte übernehmen</button>
+      </div>
+      <div id="dgErr" style="color:var(--red);font-size:13px;margin-top:8px"></div>
+      <div id="dgPreview"></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-pri btn-sm" onclick="CVadd('attr')">+ Attribut</button>
+      <button class="btn btn-g btn-sm" onclick="CVadd('block')">+ Schlüssel-Block</button>
+      <div class="sep"></div>
+      <button class="btn btn-g btn-sm" id="tool-arrow" onclick="CVsetTool('arrow')">↗ Pfeil</button>
+      <button class="btn btn-g btn-sm" id="tool-arrowKey" onclick="CVsetTool('arrowKey')">● Minimalschlüssel-Pfeil</button>
+      <button class="btn btn-g btn-sm" id="tool-arrowBi" onclick="CVsetTool('arrowBi')">⟷ Doppelpfeil</button>
+      <button class="btn btn-g btn-sm" id="tool-delete" onclick="CVsetTool('delete')">⌫ Löschen</button>
+      <div class="sep"></div>
+      <button class="btn btn-g btn-sm" onclick="CVclear()">Alles leeren</button>
+      <button class="btn btn-g btn-sm" onclick="CVexample()">Beispiel laden</button>
+      <span class="mode-ind" id="modeInd">Modus: Bewegen</span>
+    </div>
+
+    <div id="canvas">
+      <svg id="edges">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M1 1 L9 5 L1 9" fill="none" stroke="#3A3326" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><span class="leg-line"></span> Abhängigkeit</span>
+      <span><span class="leg-dot"></span> Punkt am Ursprung = Determinante ist Minimalschlüssel</span>
+    </div>
+    <p class="canvas-help"><b>Bewegen:</b> Box/Block ziehen. &nbsp;<b>Umbenennen:</b> Titel oder Attribut <b>doppelklicken</b> (auch im Block). &nbsp;<b>Pfeil:</b> Werkzeug wählen, dann Start anklicken — ein <b>einzelnes Attribut</b> im Block oder den <b>Block-Titel „SCHLÜSSEL“</b> (= ganzer Schlüssel) — danach das Ziel anklicken. &nbsp;<b>Feld hinzufügen:</b> „+ Feld“. &nbsp;<b>Löschen:</b> Werkzeug „Löschen“, dann Element/Pfeil anklicken.</p>
+
+    <div class="card" id="dgBuildCard" style="margin-top:22px">
+      <div class="card-h"><span class="step-n">2</span> Zielnormalform &amp; Zerlegung bauen</div>
+      <p class="hint" style="margin-top:-2px">Wähle die Zielnormalform. Lege Relationen an und klicke oben Attribute an, um sie hinzuzufügen. In einer Relation: Attribut anklicken macht es zum <span style="color:var(--blue);font-weight:600">Schlüssel</span>, nochmal anklicken normal, ✕ entfernt es.</p>
+
+      <div class="label" style="margin-top:14px">Zielnormalform</div>
+      <div class="L-nfbtns" id="dgNfbtns" style="margin:8px 0 4px"></div>
+
+      <div class="label" style="margin-top:18px">Attribute anlegen <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">(ohne Upload — Spaltennamen mit Komma trennen)</span></div>
+      <div class="row" style="margin:8px 0;gap:10px">
+        <input id="dgAttrIn" placeholder="z. B. PNR, Name, KNR, Titel, Preis" style="flex:1;min-width:240px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-family:var(--fmono);font-size:13px" onkeydown="if(event.key==='Enter'){event.preventDefault();DGaddManualAttrs();}">
+        <button class="btn btn-pri btn-sm" onclick="DGaddManualAttrs()">+ Attribute</button>
+      </div>
+      <div id="dgAttrList"></div>
+      <div id="dgFdBox"></div>
+
+      <div class="label" style="margin-top:18px">Verfügbare Attribute (anklicken → zur gewählten Relation)</div>
+      <div class="chips" id="dgPool" style="margin:8px 0"><span class="hint" style="font-style:italic">Erst oben Attribute anlegen (oder eine Tabelle hochladen).</span></div>
+
+      <div class="row" style="margin:14px 0">
+        <button class="btn btn-g btn-sm" onclick="DGaddRelation()">+ Relation</button>
+        <button class="btn btn-g btn-sm" onclick="DGshowSolution()">Lösung anzeigen</button>
+        <button class="btn btn-g btn-sm" onclick="DGclear()">Zerlegung leeren</button>
+      </div>
+      <div class="relgrid" id="dgRelGrid"></div>
+
+      <div class="row" style="margin-top:18px"><button class="btn btn-pri" onclick="DGcheck()">Prüfen</button></div>
+      <div id="dgSolution"></div>
+      <div id="dgCheckResult"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <section class="panel" id="learn">
+    <h2>NF-erlernen · Schritt für Schritt zerlegen</h2>
+    <p class="sub">Wähle eine Beispiel-Tabelle, erkenne Schlüssel und Abhängigkeiten, baue die Zerlegung selbst und lass dich prüfen — bis zur 5NF. Achtung: Manche Tabellen sind nicht einmal in 1NF!</p>
+
+    <div class="card">
+      <div class="card-h"><span class="step-n">1</span> Tabelle wählen</div>
+      <select id="L-table" onchange="LselectTable(this.value)" style="max-width:340px">
+        <option value="">— Beispiel auswählen —</option>
+        <option value="kursliste">Kursliste — zusammengesetzter Schlüssel</option>
+        <option value="lieferung">Lieferung — zusammengesetzter Schlüssel</option>
+        <option value="personfamilie">PersonFamilie — ⚠ nicht in 1NF</option>
+        <option value="lehrangebot">Lehrangebot — mehrwertige Abhängigkeiten (4NF)</option>
+        <option value="hotel">Hotel-Buchung — ganze Kette bis 5NF</option>
+      </select>
+      <div id="L-tableInfo"></div>
+    </div>
+
+    <div class="card" id="L-targetCard" style="display:none">
+      <div class="card-h"><span class="step-n">2</span> Zielnormalform &amp; Musterlösung</div>
+      <p class="hint" style="margin-top:-4px">Wähle ein Ziel und lass dir die mathematisch korrekte Zerlegung zeigen.</p>
+      <div class="L-nfbtns" id="L-nfbtns" style="margin:12px 0"></div>
+      <div class="row">
+        <button class="btn btn-pri" onclick="LshowSolution()">Lösung anzeigen</button>
+        <button class="btn btn-g btn-sm" onclick="LhideSolution()">Lösung ausblenden</button>
+      </div>
+      <div id="L-solution"></div>
+    </div>
+
+    <div class="card" id="L-workCard" style="display:none">
+      <div class="card-h"><span class="step-n">3</span> Selbst zerlegen &amp; prüfen lassen</div>
+      <p class="hint" style="margin-top:-4px">Klicke ein Attribut unten an — es landet in der <b>aktuell gewählten</b> Relation <i>oder</i> Determinante (anklicken zum Auswählen, violett umrandet).</p>
+      <div class="label" style="font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.1em;margin:14px 0 8px">Verfügbare Attribute</div>
+      <div class="chips" id="L-pool"></div>
+
+      <div class="L-cols">
+        <div class="L-left">
+          <div class="L-coltitle" style="margin-top:16px">Deine Relationen</div>
+          <p class="hint">In einer Relation: Attribut anklicken = <span style="color:var(--blue);font-weight:600">Schlüssel</span> / normal, ✕ entfernt.</p>
+          <div class="row" style="margin:8px 0"><button class="btn btn-g btn-sm" onclick="LaddRelation()">+ Relation</button><button class="btn btn-g btn-sm" onclick="LclearRels()">Leeren</button></div>
+          <div class="relgrid" id="L-relGrid"></div>
+        </div>
+        <div class="L-right">
+          <div class="L-coltitle" style="margin-top:16px">Determinanten-Analyse</div>
+          <p class="hint">Lege Determinanten an, klick Attribute hinein — das System sagt, ob es ein <b>Schlüsselkandidat</b> ist (X⁺ = R und minimal).</p>
+          <div class="row" style="margin:8px 0"><button class="btn btn-g btn-sm" onclick="LaddDet()">+ Determinante</button></div>
+          <div id="L-detGrid"></div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:18px"><button class="btn btn-pri" onclick="Lcheck()">Prüfen</button></div>
+      <div id="L-checkResult"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="nfstufe">
+    <iframe title="NF – Stufe für Stufe" style="width:100%;height:82vh;min-height:560px;border:1px solid var(--line);border-radius:14px;background:#fff;display:block" srcdoc="<!DOCTYPE html>
+<html lang=&quot;de&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot;>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;>
+<title>Normalformen lernen · 1NF bis 5NF</title>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
+<link href=&quot;https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+  :root{
+    --paper:#F5F6F8;
+    --surface:#FFFFFF;
+    --ink:#1A1F2E;
+    --ink-soft:#4C5366;
+    --ink-faint:#878D9C;
+    --line:#E3E6EC;
+    --line-soft:#EEF0F4;
+    --font-display:'Space Grotesk',system-ui,sans-serif;
+    --font-body:'Newsreader',Georgia,serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+    --nf1:#2563EB;
+    --nf2:#0891B2;
+    --nf3:#7C3AED;
+    --nfb:#D97706;
+    --nf4:#DB2777;
+    --nf5:#16A34A;
+    --radius:14px;
+    --radius-sm:9px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:var(--font-body);font-size:17px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:#1A1F2E;color:#fff}
+  a{color:inherit}
+  h1,h2,h3,h4,.eyebrow,.tag,button,nav,.label,.mono,th{font-family:var(--font-display)}
+  .mono,code,.fd,.attr,td.data{font-family:var(--font-mono)}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px;
+    display:grid;grid-template-columns:230px 1fr;gap:48px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr;gap:0}}
+
+  /* ---------- Sidebar / Leiter ---------- */
+  .rail{position:sticky;top:0;height:100vh;padding:32px 0;
+    display:flex;flex-direction:column;gap:4px;align-self:start}
+  @media(max-width:900px){
+    .rail{position:sticky;top:0;height:auto;flex-direction:row;overflow-x:auto;
+      padding:12px 0;gap:6px;background:var(--paper);z-index:40;
+      border-bottom:1px solid var(--line);margin:0 -24px;padding-left:24px;padding-right:24px}
+  }
+  .rail-title{font-family:var(--font-display);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px;font-weight:600}
+  @media(max-width:900px){.rail-title{display:none}}
+  .step{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--radius-sm);
+    text-decoration:none;color:var(--ink-soft);font-family:var(--font-display);font-size:14.5px;
+    font-weight:500;white-space:nowrap;transition:background .18s,color .18s;border:1px solid transparent}
+  .step:hover{background:var(--surface)}
+  .step .dot{width:9px;height:9px;border-radius:50%;background:var(--c,#ccc);flex:none;
+    box-shadow:0 0 0 0 var(--c);transition:box-shadow .25s}
+  .step.active{background:var(--surface);color:var(--ink);border-color:var(--line);font-weight:600}
+  .step.active .dot{box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent)}
+  .step .lv{font-size:11px;color:var(--ink-faint);font-weight:500}
+
+  /* ---------- Main ---------- */
+  main{padding:0 0 120px;min-width:0}
+  section{padding:64px 0;border-top:1px solid var(--line-soft)}
+  section:first-child{border-top:none}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:80px 0 56px}
+  .hero .eyebrow{font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink-faint);font-weight:600;margin:0 0 22px}
+  .hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(38px,7vw,68px);
+    line-height:1.02;letter-spacing:-.02em;margin:0 0 24px}
+  .hero h1 em{font-style:normal;color:var(--nf3)}
+  .hero p.lead{font-size:21px;line-height:1.55;color:var(--ink-soft);max-width:62ch;margin:0 0 40px}
+  .ladder{display:flex;gap:8px;flex-wrap:wrap}
+  .rung{flex:1 1 130px;text-decoration:none;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 16px 18px;position:relative;overflow:hidden;
+    transition:transform .18s,box-shadow .18s,border-color .18s}
+  .rung:hover{transform:translateY(-3px);box-shadow:0 12px 28px -16px rgba(20,25,45,.35);border-color:var(--c)}
+  .rung::before{content:&quot;&quot;;position:absolute;inset:0 auto 0 0;width:4px;background:var(--c)}
+  .rung .lv{font-family:var(--font-display);font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+  .rung .nm{font-family:var(--font-display);font-weight:700;font-size:22px;color:var(--ink);margin-top:6px}
+  .rung .ds{font-family:var(--font-body);font-size:13.5px;color:var(--ink-soft);line-height:1.4;margin-top:6px}
+
+  /* ---------- Section heads ---------- */
+  .sec-eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--font-display);
+    font-size:12px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;
+    color:var(--accent);margin:0 0 16px}
+  .sec-eyebrow .pill{background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+    color:color-mix(in srgb,var(--accent) 72%,black);padding:4px 10px;border-radius:20px;letter-spacing:.06em}
+  h2{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,4.5vw,40px);
+    letter-spacing:-.015em;line-height:1.08;margin:0 0 18px}
+  h3{font-family:var(--font-display);font-weight:600;font-size:21px;margin:36px 0 12px;letter-spacing:-.01em}
+  p{margin:0 0 16px;max-width:70ch}
+  strong{font-weight:600}
+  .accent-text{color:var(--accent);font-weight:600}
+
+  /* ---------- Rule box ---------- */
+  .rule{background:color-mix(in srgb,var(--accent) 7%,var(--surface));
+    border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));
+    border-radius:var(--radius);padding:22px 24px;margin:22px 0;position:relative}
+  .rule .label{font-family:var(--font-display);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:600;color:color-mix(in srgb,var(--accent) 70%,black);margin-bottom:8px}
+  .rule p{margin:0;font-size:18px;color:var(--ink)}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin:22px 0}
+  .card-h{font-family:var(--font-display);font-weight:600;font-size:16px;margin:0 0 14px;
+    display:flex;align-items:center;gap:9px}
+  .badge{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.05em;
+    padding:3px 9px;border-radius:6px}
+  .badge.bad{background:#FCE9E9;color:#B4231F}
+  .badge.good{background:#E5F4EA;color:#15803D}
+  .badge.warn{background:#FBF0DC;color:#B45309}
+
+  /* ---------- Tables ---------- */
+  .tbl-scroll{overflow-x:auto;margin:18px 0;border-radius:var(--radius-sm)}
+  table.db{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden}
+  table.db th{background:#F0F2F6;text-align:left;padding:9px 13px;font-family:var(--font-mono);
+    font-weight:600;font-size:12.5px;color:var(--ink);border-bottom:1px solid var(--line);white-space:nowrap}
+  table.db td{padding:8px 13px;border-bottom:1px solid var(--line-soft);font-family:var(--font-mono);
+    color:var(--ink-soft);white-space:nowrap}
+  table.db tr:last-child td{border-bottom:none}
+  table.db th.key,table.db td.key{background:color-mix(in srgb,var(--nf1) 9%,var(--surface));color:var(--ink)}
+  table.db th.key{color:var(--nf1)}
+  .redund{background:#FCEEEE!important;color:#B4231F!important}
+
+  /* relation chip rows */
+  .rel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;
+    font-family:var(--font-mono);font-size:13.5px}
+  .rel .rn{font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--accent2,var(--ink))}
+  .rel .at{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:4px 10px;color:var(--ink-soft)}
+  .rel .at.pk{border-color:color-mix(in srgb,var(--nf1) 45%,var(--line));
+    background:color-mix(in srgb,var(--nf1) 8%,var(--surface));color:var(--nf1);font-weight:500}
+  .rel .at.fk{border-style:dashed;color:var(--ink-faint)}
+
+  /* fd notation */
+  .fd-list{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+  .fd{display:inline-flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-soft);flex-wrap:wrap}
+  .fd .det{background:color-mix(in srgb,var(--accent) 12%,var(--surface));
+    color:color-mix(in srgb,var(--accent) 75%,black);padding:3px 9px;border-radius:6px;font-weight:500}
+  .fd .arr{color:var(--ink-faint);font-family:var(--font-display)}
+  .fd .dep{color:var(--ink-soft)}
+  .fd.struct{}
+  .fd .tag-s{font-family:var(--font-display);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:2px 7px;border-radius:5px;margin-left:4px}
+  .tag-ok{background:#E5F4EA;color:#15803D}
+  .tag-q{background:#FBF0DC;color:#B45309}
+  .tag-no{background:#FCE9E9;color:#B4231F}
+
+  /* arrow flow before/after */
+  .flow{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;margin:22px 0}
+  @media(max-width:680px){.flow{grid-template-columns:1fr;gap:14px}.flow .ar{transform:rotate(90deg)}}
+  .flow .ar{font-size:26px;color:var(--accent);font-family:var(--font-display)}
+  .flow-box{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px}
+  .flow-box .ft{font-family:var(--font-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-faint);font-weight:600;margin-bottom:8px}
+
+  /* mini self-check (reveal) */
+  .check{background:color-mix(in srgb,var(--accent) 5%,var(--surface));
+    border:1px dashed color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:var(--radius-sm);
+    padding:18px 20px;margin:24px 0}
+  .check .q{font-family:var(--font-display);font-weight:600;font-size:15.5px;margin-bottom:6px;
+    display:flex;align-items:center;gap:8px}
+  .check .q::before{content:&quot;?&quot;;font-family:var(--font-display);background:var(--accent);color:#fff;
+    width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+  .reveal-btn{font-family:var(--font-display);font-size:13px;font-weight:500;color:var(--accent);
+    background:none;border:none;cursor:pointer;padding:6px 0;text-decoration:underline;text-underline-offset:3px}
+  .answer{display:none;margin-top:8px;font-size:15.5px;color:var(--ink-soft);padding-top:10px;
+    border-top:1px solid var(--line-soft)}
+  .answer.show{display:block}
+
+  /* ---------- Why / anomalies ---------- */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+  @media(max-width:680px){.grid3{grid-template-columns:1fr}}
+  .anom{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .anom h4{font-family:var(--font-display);font-size:15px;margin:0 0 6px;color:var(--ink)}
+  .anom p{font-size:14px;color:var(--ink-soft);margin:0;line-height:1.5}
+  .anom .ic{font-family:var(--font-display);font-weight:700;font-size:13px;color:#B4231F;
+    background:#FCE9E9;display:inline-block;padding:2px 8px;border-radius:6px;margin-bottom:10px}
+
+  /* ---------- Checklist ---------- */
+  .clist{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  @media(max-width:760px){.clist{grid-template-columns:1fr}}
+  .cl-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 22px;border-top:4px solid var(--c)}
+  .cl-card .h{font-family:var(--font-display);font-weight:700;font-size:18px;display:flex;
+    align-items:baseline;gap:8px;margin-bottom:4px}
+  .cl-card .h .lv{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);font-weight:600}
+  .cl-card ul{list-style:none;padding:0;margin:12px 0 0}
+  .cl-card li{font-size:14.5px;color:var(--ink-soft);padding:7px 0 7px 28px;position:relative;line-height:1.45;
+    border-top:1px solid var(--line-soft)}
+  .cl-card li:first-child{border-top:none}
+  .cl-card li::before{content:&quot;&quot;;position:absolute;left:2px;top:12px;width:14px;height:14px;border-radius:4px;
+    border:2px solid var(--c)}
+  .cl-card li.plus::after{content:&quot;+ baut auf der vorigen NF auf&quot;;font-size:11px;color:var(--ink-faint)}
+
+  /* ---------- Quiz ---------- */
+  .quiz-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+  .score{font-family:var(--font-mono);font-size:14px;color:var(--ink-soft);background:var(--surface);
+    border:1px solid var(--line);border-radius:20px;padding:7px 16px}
+  .score b{color:var(--nf5)}
+  .qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;margin:16px 0}
+  .qcard .qtag{display:inline-block;font-family:var(--font-display);font-size:11px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:6px;color:#fff;margin-bottom:14px}
+  .qcard .qtext{font-family:var(--font-display);font-weight:600;font-size:18px;line-height:1.4;margin-bottom:16px}
+  .opts{display:flex;flex-direction:column;gap:9px}
+  .opt{text-align:left;font-family:var(--font-body);font-size:15.5px;color:var(--ink);
+    background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius-sm);
+    padding:13px 16px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;gap:11px;align-items:flex-start}
+  .opt:hover:not(.locked){border-color:var(--ink-faint)}
+  .opt .mk{font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--ink-faint);flex:none;
+    width:22px;height:22px;border-radius:6px;background:var(--line-soft);display:grid;place-items:center;margin-top:1px}
+  .opt.locked{cursor:default}
+  .opt.correct{border-color:var(--nf5);background:#EAF7EE}
+  .opt.correct .mk{background:var(--nf5);color:#fff}
+  .opt.wrong{border-color:#E2655F;background:#FCEEEE}
+  .opt.wrong .mk{background:#D4423C;color:#fff}
+  .expl{display:none;margin-top:16px;padding:15px 17px;background:color-mix(in srgb,var(--nf5) 6%,var(--surface));
+    border:1px solid color-mix(in srgb,var(--nf5) 25%,var(--line));border-radius:var(--radius-sm);
+    font-size:15px;color:var(--ink-soft);line-height:1.55}
+  .expl.show{display:block}
+  .expl b{color:var(--ink)}
+
+  /* ---------- Trainer ---------- */
+  .tr-row{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:14px 16px;margin:10px 0;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .tr-row .lhs{font-family:var(--font-mono);font-size:14.5px;flex:1 1 200px;display:flex;align-items:center;gap:10px}
+  .tr-row .lhs .an{background:color-mix(in srgb,var(--nf4) 10%,var(--surface));
+    border:1px solid color-mix(in srgb,var(--nf4) 30%,var(--line));color:color-mix(in srgb,var(--nf4) 75%,black);
+    padding:4px 11px;border-radius:7px;font-weight:500}
+  .tr-row .lhs .lbl{font-family:var(--font-body);font-size:13.5px;color:var(--ink-faint)}
+  .dets{display:flex;flex-wrap:wrap;gap:6px}
+  .det-pill{font-family:var(--font-mono);font-size:12.5px;border:1.5px solid var(--line);background:var(--surface);
+    color:var(--ink-soft);border-radius:7px;padding:5px 10px;cursor:pointer;transition:all .14s}
+  .det-pill:hover{border-color:var(--ink-faint)}
+  .det-pill.sel{border-color:var(--nf3);background:color-mix(in srgb,var(--nf3) 10%,var(--surface));
+    color:color-mix(in srgb,var(--nf3) 78%,black);font-weight:500}
+  .tr-row.ok{border-color:var(--nf5);background:#F1FAF4}
+  .tr-row.no{border-color:#E2655F;background:#FDF1F1}
+  .tr-row .verdict{font-family:var(--font-display);font-weight:700;font-size:18px;width:24px;text-align:center}
+  .tr-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn{font-family:var(--font-display);font-weight:600;font-size:14.5px;border-radius:var(--radius-sm);
+    padding:11px 22px;cursor:pointer;border:1.5px solid transparent;transition:all .15s}
+  .btn-primary{background:var(--nf3);color:#fff}
+  .btn-primary:hover{background:color-mix(in srgb,var(--nf3) 85%,black)}
+  .btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink-soft)}
+  .btn-ghost:hover{border-color:var(--ink-faint)}
+  .tr-result{display:none;margin-top:20px;padding:20px 22px;border-radius:var(--radius);
+    background:color-mix(in srgb,var(--nf5) 6%,var(--surface));border:1px solid color-mix(in srgb,var(--nf5) 25%,var(--line))}
+  .tr-result.show{display:block}
+  .tr-result h4{font-family:var(--font-display);margin:0 0 12px;font-size:17px;color:var(--ink)}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:40px 0 0;color:var(--ink-faint);font-size:14px}
+  footer .mono{font-family:var(--font-mono)}
+
+  .intro-hint{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--nf3);
+    border-radius:var(--radius-sm);padding:16px 20px;margin:0 0 8px;font-size:15px;color:var(--ink-soft)}
+  .kbd{font-family:var(--font-mono);font-size:12px;background:#F0F2F6;border:1px solid var(--line);
+    border-radius:5px;padding:1px 6px;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class=&quot;wrap&quot;>
+
+  <!-- ============ SIDEBAR / NF-LEITER ============ -->
+  <aside class=&quot;rail&quot; aria-label=&quot;Navigation der Normalformen&quot;>
+    <div class=&quot;rail-title&quot;>Die Leiter</div>
+    <a class=&quot;step&quot; href=&quot;#grundlagen&quot; style=&quot;--c:#878D9C&quot;><span class=&quot;dot&quot;></span><span>Grundlagen</span></a>
+    <a class=&quot;step&quot; href=&quot;#nf1&quot; style=&quot;--c:var(--nf1)&quot;><span class=&quot;dot&quot;></span><span>1NF</span><span class=&quot;lv&quot;>· atomar</span></a>
+    <a class=&quot;step&quot; href=&quot;#nf2&quot; style=&quot;--c:var(--nf2)&quot;><span class=&quot;dot&quot;></span><span>2NF</span><span class=&quot;lv&quot;>· voll</span></a>
+    <a class=&quot;step&quot; href=&quot;#nf3&quot; style=&quot;--c:var(--nf3)&quot;><span class=&quot;dot&quot;></span><span>3NF</span><span class=&quot;lv&quot;>· transitiv</span></a>
+    <a class=&quot;step&quot; href=&quot;#bcnf&quot; style=&quot;--c:var(--nfb)&quot;><span class=&quot;dot&quot;></span><span>BCNF</span></a>
+    <a class=&quot;step&quot; href=&quot;#nf4&quot; style=&quot;--c:var(--nf4)&quot;><span class=&quot;dot&quot;></span><span>4NF</span><span class=&quot;lv&quot;>· MVD</span></a>
+    <a class=&quot;step&quot; href=&quot;#nf5&quot; style=&quot;--c:var(--nf5)&quot;><span class=&quot;dot&quot;></span><span>5NF</span><span class=&quot;lv&quot;>· Join</span></a>
+    <a class=&quot;step&quot; href=&quot;#checkliste&quot; style=&quot;--c:#1A1F2E&quot;><span class=&quot;dot&quot;></span><span>Checkliste</span></a>
+    <a class=&quot;step&quot; href=&quot;#test&quot; style=&quot;--c:#1A1F2E&quot;><span class=&quot;dot&quot;></span><span>Teste dich</span></a>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+
+    <!-- HERO -->
+    <header class=&quot;hero&quot;>
+      <p class=&quot;eyebrow&quot;>Datenbanken · Daten- und Informationsanalyse</p>
+      <h1>Normalformen,<br>Stufe für Stufe <em>erklärt.</em></h1>
+      <p class=&quot;lead&quot;>Jede Normalform ist strenger als die vorige. Du startest mit einer breiten, redundanten Tabelle und zerlegst sie Schritt für Schritt in saubere Relationen – bis zur 5. Normalform. Hier sind Theorie, Beispiele, Checklisten und zwei Übungsbereiche zum Selbsttesten.</p>
+      <nav class=&quot;ladder&quot; aria-label=&quot;Übersicht der Normalformen&quot;>
+        <a class=&quot;rung&quot; href=&quot;#nf1&quot; style=&quot;--c:var(--nf1)&quot;><div class=&quot;lv&quot;>Stufe 1</div><div class=&quot;nm&quot;>1NF</div><div class=&quot;ds&quot;>Atomare Werte, keine Listen in Zellen</div></a>
+        <a class=&quot;rung&quot; href=&quot;#nf2&quot; style=&quot;--c:var(--nf2)&quot;><div class=&quot;lv&quot;>Stufe 2</div><div class=&quot;nm&quot;>2NF</div><div class=&quot;ds&quot;>Volle Abhängigkeit vom ganzen Schlüssel</div></a>
+        <a class=&quot;rung&quot; href=&quot;#nf3&quot; style=&quot;--c:var(--nf3)&quot;><div class=&quot;lv&quot;>Stufe 3</div><div class=&quot;nm&quot;>3NF</div><div class=&quot;ds&quot;>Keine transitiven Abhängigkeiten</div></a>
+        <a class=&quot;rung&quot; href=&quot;#bcnf&quot; style=&quot;--c:var(--nfb)&quot;><div class=&quot;lv&quot;>Stufe 3+</div><div class=&quot;nm&quot;>BCNF</div><div class=&quot;ds&quot;>Jede Determinante ist Schlüssel</div></a>
+        <a class=&quot;rung&quot; href=&quot;#nf4&quot; style=&quot;--c:var(--nf4)&quot;><div class=&quot;lv&quot;>Stufe 4</div><div class=&quot;nm&quot;>4NF</div><div class=&quot;ds&quot;>Keine mehrwertigen Abhängigkeiten</div></a>
+        <a class=&quot;rung&quot; href=&quot;#nf5&quot; style=&quot;--c:var(--nf5)&quot;><div class=&quot;lv&quot;>Stufe 5</div><div class=&quot;nm&quot;>5NF</div><div class=&quot;ds&quot;>Keine zerlegbaren Verbundabhängigkeiten</div></a>
+      </nav>
+    </header>
+
+    <!-- ============ GRUNDLAGEN ============ -->
+    <section id=&quot;grundlagen&quot; style=&quot;--accent:#5B6275&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Fundament</span> Das musst du zuerst verstehen</p>
+      <h2>Funktionale Abhängigkeit &amp;amp; Schlüssel</h2>
+      <p>Normalisierung dreht sich um eine einzige Grundidee: die <strong>funktionale Abhängigkeit</strong> (FD). Man schreibt <code>A → B</code> und liest „A bestimmt B“. Das heißt: zu jedem Wert von <code>A</code> gibt es <strong>genau einen</strong> Wert von <code>B</code>.</p>
+      <div class=&quot;fd-list&quot;>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>GastID</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>Gastname</span> &amp;nbsp;– „zu jeder GastID gehört genau ein Name“</span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>GastPLZ</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>GastOrt</span> &amp;nbsp;– „eine PLZ liegt in genau einem Ort“</span>
+      </div>
+
+      <h3>Drei Arten von Abhängigkeit</h3>
+      <p>Genau diese drei tauchen in jeder Normalform-Prüfung wieder auf:</p>
+      <div class=&quot;grid3&quot;>
+        <div class=&quot;anom&quot;>
+          <h4>Volle Abhängigkeit</h4>
+          <p>Ein Attribut hängt vom <em>gesamten</em> Schlüssel ab – bei zusammengesetztem Schlüssel von allen Teilen zusammen.</p>
+        </div>
+        <div class=&quot;anom&quot;>
+          <h4>Partielle Abhängigkeit</h4>
+          <p>Ein Attribut hängt nur von einem <em>Teil</em> eines zusammengesetzten Schlüssels ab. → Thema der 2NF.</p>
+        </div>
+        <div class=&quot;anom&quot;>
+          <h4>Transitive Abhängigkeit</h4>
+          <p>Der Schlüssel bestimmt X, und X bestimmt Y. Y hängt also „über Umwege“ vom Schlüssel ab. → Thema der 3NF.</p>
+        </div>
+      </div>
+
+      <h3>Schlüssel-Begriffe</h3>
+      <p>Ein <strong>Schlüsselkandidat</strong> ist eine minimale Attributmenge, die jede Zeile eindeutig identifiziert. Einer davon wird zum <strong>Primärschlüssel</strong> (PK) gewählt. Alle übrigen Attribute heißen <strong>Nicht-Schlüsselattribute</strong>. Eine <strong>Determinante</strong> ist die linke Seite einer FD – das, was etwas bestimmt.</p>
+
+      <h3>Warum überhaupt normalisieren?</h3>
+      <p>Eine unnormalisierte Tabelle speichert dieselbe Information mehrfach. Diese Redundanz führt zu drei klassischen <strong>Anomalien</strong>:</p>
+      <div class=&quot;grid3&quot;>
+        <div class=&quot;anom&quot;><span class=&quot;ic&quot;>Einfügen</span><p>Du kannst ein neues Hotel nicht speichern, solange es noch keine Buchung dafür gibt – die Hoteldaten haben keinen eigenen Platz.</p></div>
+        <div class=&quot;anom&quot;><span class=&quot;ic&quot;>Ändern</span><p>Ändert sich die Hotel-Telefonnummer, musst du sie in jeder einzelnen Buchungszeile anpassen. Vergisst du eine, ist die Datenbank widersprüchlich.</p></div>
+        <div class=&quot;anom&quot;><span class=&quot;ic&quot;>Löschen</span><p>Löschst du die letzte Buchung eines Gastes, verschwinden ungewollt auch dessen Stammdaten.</p></div>
+      </div>
+      <p>Normalisierung beseitigt diese Anomalien, indem jede Information genau an <em>einer</em> Stelle gespeichert wird.</p>
+    </section>
+
+    <!-- ============ 1NF ============ -->
+    <section id=&quot;nf1&quot; style=&quot;--accent:var(--nf1)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Stufe 1</span> Erste Normalform</p>
+      <h2>1NF — alles atomar</h2>
+      <p>Die 1NF ist die Eintrittskarte: Eine Relation ist in 1NF, wenn <strong>jede Zelle genau einen, unteilbaren Wert</strong> enthält. Keine Listen, keine Mehrfachwerte, keine Wiederholungsgruppen in einer Spalte.</p>
+      <div class=&quot;rule&quot;><div class=&quot;label&quot;>Regel</div><p>Jeder Attributwert ist atomar – es gibt keine Spalte, in der mehrere Werte zusammengepackt sind.</p></div>
+
+      <h3>Beispiel: Verletzung</h3>
+      <p>Die Spalte <code>Kurse</code> enthält mehrere Werte pro Zelle – das ist <span class=&quot;badge bad&quot;>nicht 1NF</span>:</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>StudNr</th><th>Name</th><th>Kurse</th></tr>
+          <tr><td class=&quot;key&quot;>S01</td><td>Müller</td><td class=&quot;redund&quot;>DB, C, Java</td></tr>
+          <tr><td class=&quot;key&quot;>S02</td><td>Hansen</td><td class=&quot;redund&quot;>Java, C++</td></tr>
+        </table>
+      </div>
+      <p>So wird daraus 1NF – ein Wert pro Zeile <span class=&quot;badge good&quot;>1NF ✓</span>:</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>StudNr</th><th class=&quot;key&quot;>Kurs</th><th>Name</th></tr>
+          <tr><td class=&quot;key&quot;>S01</td><td class=&quot;key&quot;>DB</td><td>Müller</td></tr>
+          <tr><td class=&quot;key&quot;>S01</td><td class=&quot;key&quot;>C</td><td>Müller</td></tr>
+          <tr><td class=&quot;key&quot;>S01</td><td class=&quot;key&quot;>Java</td><td>Müller</td></tr>
+          <tr><td class=&quot;key&quot;>S02</td><td class=&quot;key&quot;>Java</td><td>Hansen</td></tr>
+          <tr><td class=&quot;key&quot;>S02</td><td class=&quot;key&quot;>C++</td><td>Hansen</td></tr>
+        </table>
+      </div>
+      <p>Beachte: Damit wird der Schlüssel oft <strong>zusammengesetzt</strong> – genau das öffnet die Tür zur nächsten Frage (2NF).</p>
+
+      <div class=&quot;check&quot;>
+        <div class=&quot;q&quot;>Eine Spalte „Adresse“ enthält „Hauptstr. 5, 86150 Augsburg“. Ist das 1NF?</div>
+        <button class=&quot;reveal-btn&quot; onclick=&quot;rev(this)&quot;>Antwort anzeigen</button>
+        <div class=&quot;answer&quot;>Kommt auf die Sicht an: Behandelst du die Adresse als <em>einen</em> Wert, ist es 1NF. Brauchst du Straße, PLZ und Ort aber einzeln (z. B. für „PLZ → Ort“), dann ist die Zelle nicht atomar genug und sollte aufgeteilt werden. Atomar heißt immer „unteilbar <strong>bezogen auf den fachlichen Bedarf</strong>“.</div>
+      </div>
+    </section>
+
+    <!-- ============ 2NF ============ -->
+    <section id=&quot;nf2&quot; style=&quot;--accent:var(--nf2)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Stufe 2</span> Zweite Normalform</p>
+      <h2>2NF — voll vom ganzen Schlüssel</h2>
+      <p>Eine Relation ist in 2NF, wenn sie in 1NF ist <strong>und</strong> jedes Nicht-Schlüsselattribut <strong>voll funktional</strong> vom gesamten Schlüssel abhängt. Mit anderen Worten: es gibt keine <strong>partielle Abhängigkeit</strong>.</p>
+      <div class=&quot;rule&quot;><div class=&quot;label&quot;>Regel</div><p>Kein Nicht-Schlüsselattribut hängt nur von einem <em>Teil</em> des Schlüssels ab.</p></div>
+      <p><strong>Wichtig:</strong> Partielle Abhängigkeiten können nur bei <em>zusammengesetzten</em> Schlüsseln auftreten. Ist der Schlüssel einattributig, ist die 2NF automatisch erfüllt.</p>
+
+      <h3>Beispiel: die Kursliste</h3>
+      <p>Schlüsselkandidat ist <code>(PNR, KNR)</code>. Aber die Attribute hängen nur von Teilen ab:</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>PNR</th><th class=&quot;key&quot;>KNR</th><th>Name</th><th>Adresse</th><th>Titel</th><th>Gebühr</th><th>Preis</th></tr>
+          <tr><td class=&quot;key&quot;>2100</td><td class=&quot;key&quot;>23</td><td class=&quot;redund&quot;>Müller</td><td class=&quot;redund&quot;>Essen</td><td>DB</td><td>5.000</td><td>4.500</td></tr>
+          <tr><td class=&quot;key&quot;>2100</td><td class=&quot;key&quot;>17</td><td class=&quot;redund&quot;>Müller</td><td class=&quot;redund&quot;>Essen</td><td>C</td><td>3.000</td><td>2.700</td></tr>
+          <tr><td class=&quot;key&quot;>2544</td><td class=&quot;key&quot;>24</td><td>Schmidt</td><td>Frankfurt</td><td class=&quot;redund&quot;>Java</td><td class=&quot;redund&quot;>3.500</td><td>2.700</td></tr>
+        </table>
+      </div>
+      <div class=&quot;fd-list&quot;>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>PNR</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>Name, Adresse</span><span class=&quot;tag-s tag-no&quot;>partiell → verletzt 2NF</span></span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>KNR</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>Titel, Gebühr</span><span class=&quot;tag-s tag-no&quot;>partiell → verletzt 2NF</span></span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>PNR, KNR</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>Preis</span><span class=&quot;tag-s tag-ok&quot;>voll ✓</span></span>
+      </div>
+      <p>„Müller / Essen“ wiederholt sich für jeden Kurs des Teilnehmers – sichtbare Redundanz. Die Lösung: jede Determinante bekommt ihre eigene Relation.</p>
+      <div class=&quot;flow&quot;>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>vorher</div><div class=&quot;mono&quot; style=&quot;font-size:13.5px&quot;>Kursliste(<span style=&quot;color:var(--nf1)&quot;>PNR, KNR</span>, Name, Adresse, Titel, Gebühr, Preis)</div></div>
+        <div class=&quot;ar&quot;>→</div>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>nachher · 2NF</div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>TEILNEHMER</span><span class=&quot;at pk&quot;>PNR</span><span class=&quot;at&quot;>Name</span><span class=&quot;at&quot;>Adresse</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>KURS</span><span class=&quot;at pk&quot;>KNR</span><span class=&quot;at&quot;>Titel</span><span class=&quot;at&quot;>Gebühr</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>BELEGUNG</span><span class=&quot;at pk&quot;>PNR</span><span class=&quot;at pk&quot;>KNR</span><span class=&quot;at&quot;>Preis</span></div>
+        </div>
+      </div>
+
+      <div class=&quot;check&quot;>
+        <div class=&quot;q&quot;>Eine Tabelle hat den Schlüssel <code>BuchungsNr</code> (nur ein Attribut) und viele Nicht-Schlüsselattribute. Kann sie die 2NF verletzen?</div>
+        <button class=&quot;reveal-btn&quot; onclick=&quot;rev(this)&quot;>Antwort anzeigen</button>
+        <div class=&quot;answer&quot;>Nein. Eine partielle Abhängigkeit braucht einen <em>Teil</em> des Schlüssels – bei einem einattributigen Schlüssel gibt es keinen echten Teil. Die 2NF ist damit immer erfüllt. (Genau das ist bei der Hotel-Tabelle der Fall – sie ist trotzdem nicht in 3NF, wie du gleich siehst.)</div>
+      </div>
+    </section>
+
+    <!-- ============ 3NF ============ -->
+    <section id=&quot;nf3&quot; style=&quot;--accent:var(--nf3)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Stufe 3</span> Dritte Normalform</p>
+      <h2>3NF — keine Umwege</h2>
+      <p>Eine Relation ist in 3NF, wenn sie in 2NF ist <strong>und</strong> kein Nicht-Schlüsselattribut <strong>transitiv</strong> vom Schlüssel abhängt. Verboten ist also: <em>Nicht-Schlüssel bestimmt Nicht-Schlüssel</em>.</p>
+      <div class=&quot;rule&quot;><div class=&quot;label&quot;>Regel</div><p>Jedes Nicht-Schlüsselattribut hängt <em>direkt</em> vom Schlüssel ab – nicht über ein anderes Nicht-Schlüsselattribut.</p></div>
+
+      <h3>Beispiel: die Hotel-Buchung (deine Aufgabe)</h3>
+      <p>Schlüssel ist <code>BuchungsNr</code>. Die 2NF ist erfüllt (einattributiger Schlüssel). Aber es stecken mehrere transitive Ketten drin:</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>BuchungsNr</th><th>GastID</th><th>Gastname</th><th>GastPLZ</th><th>GastOrt</th><th>ZimmerNr</th><th>ZimmerTyp</th><th>PreisKat.</th><th>Hotel</th><th>HotelTel.</th></tr>
+          <tr><td class=&quot;key&quot;>H1001</td><td>G001</td><td>Martin Seidel</td><td>80331</td><td class=&quot;redund&quot;>München</td><td>Z101</td><td>Einzelzimmer</td><td class=&quot;redund&quot;>Standard</td><td>Hotel Central</td><td class=&quot;redund&quot;>089-776655</td></tr>
+          <tr><td class=&quot;key&quot;>H1004</td><td>G001</td><td class=&quot;redund&quot;>Martin Seidel</td><td class=&quot;redund&quot;>80331</td><td class=&quot;redund&quot;>München</td><td>Z103</td><td>Einzelzimmer</td><td class=&quot;redund&quot;>Standard</td><td class=&quot;redund&quot;>Hotel Central</td><td class=&quot;redund&quot;>089-776655</td></tr>
+          <tr><td class=&quot;key&quot;>H1003</td><td>G003</td><td>Lukas Brand</td><td>50667</td><td>Köln</td><td>Z201</td><td>Suite</td><td>Premium</td><td>Grand Palace</td><td>030-998877</td></tr>
+        </table>
+      </div>
+      <div class=&quot;fd-list&quot;>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>GastID</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>Gastname, GastPLZ</span><span class=&quot;tag-s tag-no&quot;>transitiv</span></span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>GastPLZ</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>GastOrt</span><span class=&quot;tag-s tag-no&quot;>transitiv</span></span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>ZimmerNr</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>ZimmerTyp, Hotel</span><span class=&quot;tag-s tag-no&quot;>transitiv</span></span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>ZimmerTyp</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>PreisKategorie</span><span class=&quot;tag-s tag-q&quot;>transitiv · prüfen</span></span>
+        <span class=&quot;fd&quot;><span class=&quot;det&quot;>Hotel</span><span class=&quot;arr&quot;>→</span><span class=&quot;dep&quot;>HotelTelefon</span><span class=&quot;tag-s tag-no&quot;>transitiv</span></span>
+      </div>
+      <p>Jede dieser Determinanten wird zu einer eigenen Relation. Die ursprüngliche Tabelle behält nur den Schlüssel plus die Fremdschlüssel:</p>
+      <div class=&quot;flow&quot;>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>vorher</div><div class=&quot;mono&quot; style=&quot;font-size:12.5px&quot;>BUCHUNG(<span style=&quot;color:var(--nf1)&quot;>BuchungsNr</span>, GastID, Gastname, GastPLZ, GastOrt, ZimmerNr, ZimmerTyp, PreisKategorie, Hotel, HotelTelefon)</div></div>
+        <div class=&quot;ar&quot;>→</div>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>nachher · 3NF (= BCNF, s. u.)</div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>BUCHUNG</span><span class=&quot;at pk&quot;>BuchungsNr</span><span class=&quot;at fk&quot;>GastID</span><span class=&quot;at fk&quot;>ZimmerNr</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>GAST</span><span class=&quot;at pk&quot;>GastID</span><span class=&quot;at&quot;>Gastname</span><span class=&quot;at fk&quot;>GastPLZ</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>ORT</span><span class=&quot;at pk&quot;>GastPLZ</span><span class=&quot;at&quot;>GastOrt</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>ZIMMER</span><span class=&quot;at pk&quot;>ZimmerNr</span><span class=&quot;at fk&quot;>ZimmerTyp</span><span class=&quot;at fk&quot;>Hotel</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>ZIMMERTYP</span><span class=&quot;at pk&quot;>ZimmerTyp</span><span class=&quot;at&quot;>PreisKategorie</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>HOTEL</span><span class=&quot;at pk&quot;>Hotel</span><span class=&quot;at&quot;>HotelTelefon</span></div>
+        </div>
+      </div>
+
+      <div class=&quot;rule&quot; style=&quot;--accent:var(--nfb)&quot;><div class=&quot;label&quot;>Diskussionspunkt aus deiner Aufgabe</div><p><code>ZimmerTyp → PreisKategorie</code> gilt in den Daten über alle drei Hotels. Ist das eine <strong>dauerhafte Regel</strong> (dann eigene Relation ZIMMERTYP) oder nur Zufall? Wäre die Preiskategorie <em>hotelabhängig</em>, müsste sie bei ZIMMER bleiben. Das ist genau die Art Entscheidung, die ihr in der Gruppe semantisch begründen sollt.</p></div>
+
+      <div class=&quot;check&quot;>
+        <div class=&quot;q&quot;>Warum ist „GastPLZ → GastOrt“ ein Problem, „BuchungsNr → GastOrt“ aber nicht?</div>
+        <button class=&quot;reveal-btn&quot; onclick=&quot;rev(this)&quot;>Antwort anzeigen</button>
+        <div class=&quot;answer&quot;>Beide gelten – aber <code>GastPLZ</code> ist kein Schlüssel. Damit hängt GastOrt <em>über</em> ein Nicht-Schlüsselattribut vom Schlüssel ab = transitiv = verboten in 3NF. <code>BuchungsNr → GastOrt</code> ist dagegen die direkte Abhängigkeit vom Schlüssel selbst und völlig in Ordnung.</div>
+      </div>
+    </section>
+
+    <!-- ============ BCNF ============ -->
+    <section id=&quot;bcnf&quot; style=&quot;--accent:var(--nfb)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Stufe 3+</span> Boyce-Codd-Normalform</p>
+      <h2>BCNF — jede Determinante ein Schlüssel</h2>
+      <p>Die BCNF ist eine Verschärfung der 3NF. Sie verlangt: <strong>jede Determinante einer funktionalen Abhängigkeit muss ein Schlüsselkandidat sein</strong>. Der Unterschied zur 3NF wird erst sichtbar, wenn ein <em>Schlüsselattribut</em> von einem Nicht-Schlüssel bestimmt wird – etwa bei überlappenden Schlüsselkandidaten.</p>
+      <div class=&quot;rule&quot;><div class=&quot;label&quot;>Regel</div><p>Für jede gültige FD <code>X → Y</code> gilt: X ist ein Schlüsselkandidat.</p></div>
+
+      <h3>Beispiel: 3NF erfüllt, BCNF verletzt</h3>
+      <p>Tabelle <code>(Student, Kurs, Dozent)</code> mit den Regeln: jeder <strong>Dozent lehrt genau einen Kurs</strong> (<code>Dozent → Kurs</code>) und ein Student belegt einen Kurs bei genau einem Dozenten (<code>(Student, Kurs) → Dozent</code>).</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>Student</th><th class=&quot;key&quot;>Kurs</th><th>Dozent</th></tr>
+          <tr><td class=&quot;key&quot;>Anna</td><td class=&quot;key&quot;>DB</td><td>Dr. Roth</td></tr>
+          <tr><td class=&quot;key&quot;>Ben</td><td class=&quot;key&quot;>DB</td><td>Dr. Roth</td></tr>
+          <tr><td class=&quot;key&quot;>Anna</td><td class=&quot;key&quot;>Java</td><td>Dr. Lang</td></tr>
+        </table>
+      </div>
+      <p>Schlüsselkandidaten sind <code>(Student, Kurs)</code> und <code>(Student, Dozent)</code>. Die FD <code>Dozent → Kurs</code> hat als Determinante aber nur <code>Dozent</code> – und das ist <strong>kein</strong> Schlüsselkandidat. <span class=&quot;badge warn&quot;>BCNF verletzt</span> Trotzdem ist die Tabelle in 3NF, weil <code>Kurs</code> ein Schlüsselattribut ist (Teil eines Kandidaten).</p>
+      <div class=&quot;flow&quot;>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>vorher · 3NF</div><div class=&quot;mono&quot; style=&quot;font-size:13px&quot;>(<span style=&quot;color:var(--nf1)&quot;>Student, Kurs</span>, Dozent)</div></div>
+        <div class=&quot;ar&quot;>→</div>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>nachher · BCNF</div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>LEHRT</span><span class=&quot;at pk&quot;>Dozent</span><span class=&quot;at&quot;>Kurs</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>BELEGT</span><span class=&quot;at pk&quot;>Student</span><span class=&quot;at pk&quot;>Dozent</span></div>
+        </div>
+      </div>
+      <p><strong>Und die Hotel-Tabelle?</strong> Die nach 3NF zerlegten Relationen haben jeweils nur eine einzige Determinante – den Primärschlüssel. Damit sind sie <em>automatisch</em> schon in BCNF. Hier fallen 3NF und BCNF zusammen.</p>
+
+      <div class=&quot;check&quot;>
+        <div class=&quot;q&quot;>Jede BCNF-Relation ist auch in 3NF. Gilt auch die Umkehrung?</div>
+        <button class=&quot;reveal-btn&quot; onclick=&quot;rev(this)&quot;>Antwort anzeigen</button>
+        <div class=&quot;answer&quot;>Nein. BCNF ist strenger: jede BCNF-Relation ist in 3NF, aber nicht jede 3NF-Relation ist in BCNF (siehe das Dozenten-Beispiel). Die Reihenfolge der Strenge ist 1NF ⊃ 2NF ⊃ 3NF ⊃ BCNF ⊃ 4NF ⊃ 5NF.</div>
+      </div>
+    </section>
+
+    <!-- ============ 4NF ============ -->
+    <section id=&quot;nf4&quot; style=&quot;--accent:var(--nf4)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Stufe 4</span> Vierte Normalform</p>
+      <h2>4NF — keine mehrwertigen Abhängigkeiten</h2>
+      <p>Eine Relation ist in 4NF, wenn sie in BCNF ist <strong>und</strong> keine nicht-trivialen <strong>mehrwertigen Abhängigkeiten</strong> (MVD, geschrieben <code>A ↠ B</code>) enthält. Eine MVD liegt vor, wenn zu einem A-Wert eine ganze <em>Menge</em> von B-Werten gehört – <strong>unabhängig</strong> von den restlichen Attributen.</p>
+      <div class=&quot;rule&quot;><div class=&quot;label&quot;>Regel</div><p>Zwei voneinander <em>unabhängige</em> mehrwertige Fakten dürfen nicht in derselben Relation stehen.</p></div>
+
+      <h3>Beispiel: Verletzung</h3>
+      <p>Eine Person spricht mehrere <strong>Sprachen</strong> und arbeitet an mehreren <strong>Projekten</strong> – beides hat nichts miteinander zu tun. In einer Tabelle erzwingt das alle Kombinationen:</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>Name</th><th class=&quot;key&quot;>Sprache</th><th class=&quot;key&quot;>Projekt</th></tr>
+          <tr><td class=&quot;key&quot;>Lena</td><td class=&quot;key&quot;>DE</td><td class=&quot;redund&quot;>Alpha</td></tr>
+          <tr><td class=&quot;key&quot;>Lena</td><td class=&quot;key&quot;>EN</td><td class=&quot;redund&quot;>Alpha</td></tr>
+          <tr><td class=&quot;key&quot;>Lena</td><td class=&quot;redund&quot;>DE</td><td class=&quot;key&quot;>Beta</td></tr>
+          <tr><td class=&quot;key&quot;>Lena</td><td class=&quot;redund&quot;>EN</td><td class=&quot;key&quot;>Beta</td></tr>
+        </table>
+      </div>
+      <p>Vier Zeilen nur für zwei Sprachen × zwei Projekte – und bei jeder neuen Sprache verdoppelt sich der Aufwand. <span class=&quot;badge bad&quot;>4NF verletzt</span> Es gilt <code>Name ↠ Sprache</code> und <code>Name ↠ Projekt</code>. Lösung: in zwei unabhängige Relationen trennen.</p>
+      <div class=&quot;flow&quot;>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>vorher</div><div class=&quot;mono&quot; style=&quot;font-size:13px&quot;>(<span style=&quot;color:var(--nf1)&quot;>Name, Sprache, Projekt</span>)</div></div>
+        <div class=&quot;ar&quot;>→</div>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>nachher · 4NF</div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>SPRICHT</span><span class=&quot;at pk&quot;>Name</span><span class=&quot;at pk&quot;>Sprache</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>ARBEITET_AN</span><span class=&quot;at pk&quot;>Name</span><span class=&quot;at pk&quot;>Projekt</span></div>
+        </div>
+      </div>
+      <p><strong>Und die Hotel-Tabelle?</strong> Eine Buchung hat <em>genau einen</em> Gast und <em>genau ein</em> Zimmer – keine mehrwertigen Fakten. Die zerlegten Relationen sind daher bereits in 4NF.</p>
+
+      <div class=&quot;check&quot;>
+        <div class=&quot;q&quot;>Worin unterscheidet sich eine MVD von einer normalen FD?</div>
+        <button class=&quot;reveal-btn&quot; onclick=&quot;rev(this)&quot;>Antwort anzeigen</button>
+        <div class=&quot;answer&quot;>Eine FD <code>A → B</code> liefert <em>genau einen</em> B-Wert pro A. Eine MVD <code>A ↠ B</code> liefert eine <em>Menge</em> von B-Werten pro A, und diese Menge ist unabhängig von den übrigen Spalten. Jede FD ist ein Spezialfall einer MVD (Menge mit genau einem Element).</div>
+      </div>
+    </section>
+
+    <!-- ============ 5NF ============ -->
+    <section id=&quot;nf5&quot; style=&quot;--accent:var(--nf5)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Stufe 5</span> Fünfte Normalform</p>
+      <h2>5NF — keine zerlegbaren Verbünde</h2>
+      <p>Die 5NF (auch Project-Join-Normalform) ist die strengste Stufe. Eine Relation ist in 5NF, wenn jede <strong>Verbundabhängigkeit</strong> (Join Dependency) bereits durch einen Schlüsselkandidaten <strong>erzwungen</strong> wird. Klartext: Lässt sich eine Tabelle in <em>drei oder mehr</em> kleinere Tabellen verlustfrei zerlegen (aber nicht in nur zwei), dann ist sie nicht in 5NF.</p>
+      <div class=&quot;rule&quot;><div class=&quot;label&quot;>Regel</div><p>Es gibt keine verlustfreie Zerlegung in mehrere Teilrelationen, die nicht schon aus den Schlüsseln folgt.</p></div>
+
+      <h3>Beispiel: Verletzung</h3>
+      <p>Klassiker: <code>(Lieferant, Produkt, Projekt)</code> mit der Geschäftsregel – „liefert L das Produkt P, wird P im Projekt J verbaut <em>und</em> beliefert L das Projekt J, dann liefert L das Produkt P auch <strong>für</strong> J“. Diese zyklische Regel ist eine Verbundabhängigkeit.</p>
+      <div class=&quot;tbl-scroll&quot;>
+        <table class=&quot;db&quot;>
+          <tr><th class=&quot;key&quot;>Lieferant</th><th class=&quot;key&quot;>Produkt</th><th class=&quot;key&quot;>Projekt</th></tr>
+          <tr><td class=&quot;key&quot;>L1</td><td class=&quot;key&quot;>Schraube</td><td class=&quot;key&quot;>Alpha</td></tr>
+          <tr><td class=&quot;key&quot;>L1</td><td class=&quot;key&quot;>Mutter</td><td class=&quot;key&quot;>Beta</td></tr>
+          <tr><td class=&quot;key&quot;>L2</td><td class=&quot;key&quot;>Schraube</td><td class=&quot;key&quot;>Beta</td></tr>
+        </table>
+      </div>
+      <p>Diese Tabelle lässt sich <strong>verlustfrei in drei binäre Relationen</strong> zerlegen – aber nicht in nur zwei (zwei würden beim Zurück-Joinen Geister-Zeilen erzeugen). <span class=&quot;badge bad&quot;>5NF verletzt</span></p>
+      <div class=&quot;flow&quot;>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>vorher</div><div class=&quot;mono&quot; style=&quot;font-size:13px&quot;>(<span style=&quot;color:var(--nf1)&quot;>Lieferant, Produkt, Projekt</span>)</div></div>
+        <div class=&quot;ar&quot;>→</div>
+        <div class=&quot;flow-box&quot;><div class=&quot;ft&quot;>nachher · 5NF</div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>LP</span><span class=&quot;at pk&quot;>Lieferant</span><span class=&quot;at pk&quot;>Produkt</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>PJ</span><span class=&quot;at pk&quot;>Produkt</span><span class=&quot;at pk&quot;>Projekt</span></div>
+          <div class=&quot;rel&quot;><span class=&quot;rn&quot;>LJ</span><span class=&quot;at pk&quot;>Lieferant</span><span class=&quot;at pk&quot;>Projekt</span></div>
+        </div>
+      </div>
+      <p><strong>Und die Hotel-Tabelle?</strong> Alle zerlegten Relationen sind entweder zweispaltig oder werden vollständig durch ihren Schlüssel bestimmt. Es gibt keine verdeckte Verbundabhängigkeit – das Schema ist <span class=&quot;badge good&quot;>in 5NF ✓</span>. Damit ist die Aufgabe vollständig normalisiert.</p>
+
+      <div class=&quot;check&quot;>
+        <div class=&quot;q&quot;>Warum sind zweispaltige (binäre) Relationen immer in 5NF?</div>
+        <button class=&quot;reveal-btn&quot; onclick=&quot;rev(this)&quot;>Antwort anzeigen</button>
+        <div class=&quot;answer&quot;>Eine Relation mit nur zwei Attributen lässt sich nicht weiter verlustfrei zerlegen, ohne sie selbst zu reproduzieren – es gibt keine nicht-triviale Verbundabhängigkeit. Deshalb ist jede binäre Relation automatisch in 5NF. Genau darum endet die Hotel-Zerlegung bei lauter kleinen Relationen.</div>
+      </div>
+    </section>
+
+    <!-- ============ CHECKLISTE ============ -->
+    <section id=&quot;checkliste&quot; style=&quot;--accent:#1A1F2E&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Spickzettel</span> Schnell prüfen</p>
+      <h2>Checkliste pro Normalform</h2>
+      <p>Geh die Stufen immer von oben nach unten durch. Eine Relation ist erst dann in einer NF, wenn <em>alle</em> vorigen ebenfalls erfüllt sind.</p>
+      <div class=&quot;clist&quot;>
+        <div class=&quot;cl-card&quot; style=&quot;--c:var(--nf1)&quot;>
+          <div class=&quot;h&quot;>1NF <span class=&quot;lv&quot;>atomar</span></div>
+          <ul><li>Enthält jede Zelle genau einen Wert?</li><li>Keine Listen oder Wiederholungsgruppen in einer Spalte?</li><li>Gibt es einen Schlüssel, der jede Zeile eindeutig macht?</li></ul>
+        </div>
+        <div class=&quot;cl-card&quot; style=&quot;--c:var(--nf2)&quot;>
+          <div class=&quot;h&quot;>2NF <span class=&quot;lv&quot;>volle Abhängigkeit</span></div>
+          <ul><li>Ist die 1NF erfüllt?</li><li>Hängt jedes Nicht-Schlüsselattribut vom <em>gesamten</em> Schlüssel ab?</li><li>Keine partielle Abhängigkeit von einem Schlüsselteil?</li></ul>
+        </div>
+        <div class=&quot;cl-card&quot; style=&quot;--c:var(--nf3)&quot;>
+          <div class=&quot;h&quot;>3NF <span class=&quot;lv&quot;>keine Umwege</span></div>
+          <ul><li>Ist die 2NF erfüllt?</li><li>Bestimmt kein Nicht-Schlüssel ein anderes Nicht-Schlüsselattribut?</li><li>Hängt alles <em>direkt</em> vom Schlüssel ab?</li></ul>
+        </div>
+        <div class=&quot;cl-card&quot; style=&quot;--c:var(--nfb)&quot;>
+          <div class=&quot;h&quot;>BCNF <span class=&quot;lv&quot;>Determinante = Schlüssel</span></div>
+          <ul><li>Ist die 3NF erfüllt?</li><li>Ist die linke Seite <em>jeder</em> FD ein Schlüsselkandidat?</li><li>Bestimmt kein Nicht-Schlüssel ein Schlüsselattribut?</li></ul>
+        </div>
+        <div class=&quot;cl-card&quot; style=&quot;--c:var(--nf4)&quot;>
+          <div class=&quot;h&quot;>4NF <span class=&quot;lv&quot;>keine MVD</span></div>
+          <ul><li>Ist die BCNF erfüllt?</li><li>Stehen zwei unabhängige mehrwertige Fakten in einer Relation?</li><li>Falls ja → trennen.</li></ul>
+        </div>
+        <div class=&quot;cl-card&quot; style=&quot;--c:var(--nf5)&quot;>
+          <div class=&quot;h&quot;>5NF <span class=&quot;lv&quot;>keine zerlegbaren Verbünde</span></div>
+          <ul><li>Ist die 4NF erfüllt?</li><li>Lässt sich die Relation verlustfrei in 3+ Teile zerlegen?</li><li>Folgt diese Zerlegung schon aus den Schlüsseln? Wenn nein → zerlegen.</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TEST / QUIZ ============ -->
+    <section id=&quot;test&quot; style=&quot;--accent:var(--nf5)&quot;>
+      <p class=&quot;sec-eyebrow&quot;><span class=&quot;pill&quot;>Selbsttest</span> Hast du's verstanden?</p>
+      <div class=&quot;quiz-head&quot;>
+        <h2 style=&quot;margin:0&quot;>Teil 1 · NF-Detektiv</h2>
+        <div class=&quot;score&quot; id=&quot;score&quot;>Punkte: <b id=&quot;scoreNum&quot;>0</b> / <span id=&quot;scoreMax&quot;>0</span></div>
+      </div>
+      <p>Sieh dir jede Situation an und wähle die richtige Antwort. Danach erscheint sofort die Erklärung.</p>
+      <div class=&quot;intro-hint&quot;>Tipp: Geh gedanklich die Leiter hoch – erst 1NF prüfen, dann 2NF, dann 3NF … So findest du die <em>niedrigste</em> verletzte Stufe.</div>
+      <div id=&quot;quiz&quot;></div>
+
+      <h2 style=&quot;margin-top:64px&quot;>Teil 2 · Zerlegungs-Trainer</h2>
+      <p>Bei der 3NF gehört jedes Attribut zu der Relation seiner <strong>Determinante</strong>. Ordne jedem Attribut der Hotel-Buchung die richtige Determinante zu (die zum Primärschlüssel seiner neuen Relation wird). Klicke je eine Determinante an und prüfe dann.</p>
+      <div id=&quot;trainer&quot;></div>
+      <div class=&quot;tr-actions&quot;>
+        <button class=&quot;btn btn-primary&quot; onclick=&quot;checkTrainer()&quot;>Zerlegung prüfen</button>
+        <button class=&quot;btn btn-ghost&quot; onclick=&quot;resetTrainer()&quot;>Zurücksetzen</button>
+      </div>
+      <div class=&quot;tr-result&quot; id=&quot;trResult&quot;></div>
+    </section>
+
+    <footer>
+      <p class=&quot;mono&quot;>Normalformen-Lernseite · 1NF → 2NF → 3NF → BCNF → 4NF → 5NF</p>
+      <p>Durchgehende Beispiele: Kursliste (2NF) und Hotel-Buchung (3NF–5NF, deine Aufgabe). Reihenfolge der Strenge: jede höhere Normalform schließt alle niedrigeren ein.</p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+/* ---------- reveal mini-checks ---------- */
+function rev(btn){
+  var a=btn.nextElementSibling;
+  a.classList.toggle('show');
+  btn.textContent=a.classList.contains('show')?'Antwort verbergen':'Antwort anzeigen';
+}
+
+/* ---------- active nav via IntersectionObserver ---------- */
+(function(){
+  var links={};
+  document.querySelectorAll('.rail .step').forEach(function(s){
+    var id=s.getAttribute('href').slice(1); links[id]=s;
+  });
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        Object.values(links).forEach(function(l){l.classList.remove('active')});
+        var l=links[e.target.id]; if(l) l.classList.add('active');
+      }
+    });
+  },{rootMargin:'-45% 0px -50% 0px',threshold:0});
+  document.querySelectorAll('main section').forEach(function(sec){obs.observe(sec)});
+})();
+
+/* ---------- QUIZ ---------- */
+var quiz=[
+  {nf:&quot;Stufe 1 · 1NF&quot;,color:&quot;#2563EB&quot;,
+   frage:&quot;Eine Spalte „Telefon“ enthält in einer Zelle „0170-111, 0151-222“. In welchem Zustand ist die Tabelle?&quot;,
+   optionen:[&quot;Verletzt die 1NF&quot;,&quot;In 1NF, aber nicht 2NF&quot;,&quot;In 3NF&quot;,&quot;In BCNF&quot;],
+   richtig:0,
+   erkl:&quot;Die Zelle ist nicht atomar – sie packt mehrere Werte zusammen. Damit ist nicht einmal die 1NF erfüllt. Lösung: pro Nummer eine eigene Zeile oder eine separate Telefon-Tabelle.&quot;},
+  {nf:&quot;Stufe 2 · 2NF&quot;,color:&quot;#0891B2&quot;,
+   frage:&quot;Schlüssel = (PNR, KNR). „Name“ hängt nur von PNR ab, „Titel“ nur von KNR. Welche Stufe ist verletzt?&quot;,
+   optionen:[&quot;Keine – die Tabelle ist in 3NF&quot;,&quot;2NF (partielle Abhängigkeit)&quot;,&quot;1NF (nicht atomar)&quot;,&quot;5NF (Verbundabhängigkeit)&quot;],
+   richtig:1,
+   erkl:&quot;Name und Titel hängen jeweils nur von einem Teil des zusammengesetzten Schlüssels ab → partielle Abhängigkeit → die 2NF ist verletzt.&quot;},
+  {nf:&quot;Stufe 3 · 3NF&quot;,color:&quot;#7C3AED&quot;,
+   frage:&quot;In BUCHUNG gilt ZimmerNr → Hotel und Hotel → HotelTelefon. Schlüssel ist BuchungsNr. Was trifft zu?&quot;,
+   optionen:[&quot;In 3NF&quot;,&quot;2NF verletzt&quot;,&quot;3NF verletzt (transitive Abhängigkeit)&quot;,&quot;Nicht in 1NF&quot;],
+   richtig:2,
+   erkl:&quot;HotelTelefon hängt über Hotel – ein Nicht-Schlüsselattribut – vom Schlüssel ab. Das ist eine transitive Abhängigkeit → 3NF verletzt. Die 2NF ist erfüllt, weil der Schlüssel einattributig ist.&quot;},
+  {nf:&quot;Stufe 3+ · BCNF&quot;,color:&quot;#D97706&quot;,
+   frage:&quot;Tabelle (Student, Kurs, Dozent). Regel: jeder Dozent lehrt genau einen Kurs (Dozent → Kurs) und (Student, Kurs) → Dozent. Was gilt?&quot;,
+   optionen:[&quot;In BCNF&quot;,&quot;In 3NF, aber BCNF verletzt&quot;,&quot;Nicht in 1NF&quot;,&quot;2NF verletzt&quot;],
+   richtig:1,
+   erkl:&quot;Dozent ist eine Determinante (Dozent → Kurs), aber kein Schlüsselkandidat → BCNF verletzt. Die Tabelle bleibt in 3NF, weil Kurs ein Schlüsselattribut ist (Teil eines Kandidaten).&quot;},
+  {nf:&quot;Stufe 4 · 4NF&quot;,color:&quot;#DB2777&quot;,
+   frage:&quot;MITARBEITER (Name, Sprache, Projekt). Eine Person spricht mehrere Sprachen UND arbeitet an mehreren Projekten – unabhängig voneinander. Was gilt?&quot;,
+   optionen:[&quot;In 4NF&quot;,&quot;4NF verletzt (mehrwertige Abhängigkeit)&quot;,&quot;Nicht in 1NF&quot;,&quot;Nicht in 2NF&quot;],
+   richtig:1,
+   erkl:&quot;Name ↠ Sprache und Name ↠ Projekt sind unabhängige mehrwertige Abhängigkeiten. Alle Kombinationen zu speichern erzeugt Redundanz → 4NF verletzt. Lösung: (Name, Sprache) und (Name, Projekt) trennen.&quot;},
+  {nf:&quot;Stufe 5 · 5NF&quot;,color:&quot;#16A34A&quot;,
+   frage:&quot;LIEFERUNG (Lieferant, Produkt, Projekt) mit zyklischer Regel: liefert L das Produkt P, wird P im Projekt J genutzt und beliefert L das Projekt J, dann liefert L auch P für J. Was gilt?&quot;,
+   optionen:[&quot;In 5NF&quot;,&quot;5NF verletzt (zerlegbare Verbundabhängigkeit)&quot;,&quot;Nicht in 3NF&quot;,&quot;Nicht in 1NF&quot;],
+   richtig:1,
+   erkl:&quot;Die Tabelle lässt sich verlustfrei in drei binäre Relationen (L-P, P-J, L-J) zerlegen, aber nicht in nur zwei. Diese Verbundabhängigkeit folgt nicht aus einem Schlüssel → 5NF verletzt.&quot;},
+  {nf:&quot;Kontrolle · vollständig normalisiert&quot;,color:&quot;#16A34A&quot;,
+   frage:&quot;GAST (GastID [PK], Gastname, GastPLZ). GastPLZ ist Fremdschlüssel auf ORT. Es gibt keine weiteren Abhängigkeiten. Was gilt?&quot;,
+   optionen:[&quot;Verletzt 2NF&quot;,&quot;Verletzt 3NF&quot;,&quot;In 5NF (vollständig normalisiert)&quot;,&quot;Nicht in 1NF&quot;],
+   richtig:2,
+   erkl:&quot;Einziger Determinant ist der Schlüssel GastID; alle Attribute hängen voll und direkt von ihm ab. Keine transitiven, mehrwertigen oder Verbundabhängigkeiten → die Relation ist bis 5NF normalisiert.&quot;}
+];
+
+var answered=0, correct=0;
+document.getElementById('scoreMax').textContent=quiz.length;
+
+(function renderQuiz(){
+  var box=document.getElementById('quiz');
+  quiz.forEach(function(q,qi){
+    var card=document.createElement('div'); card.className='qcard';
+    var tag=document.createElement('span'); tag.className='qtag';
+    tag.style.background=q.color; tag.textContent=q.nf; card.appendChild(tag);
+    var t=document.createElement('div'); t.className='qtext'; t.textContent=q.frage; card.appendChild(t);
+    var opts=document.createElement('div'); opts.className='opts';
+    var letters=['A','B','C','D'];
+    q.optionen.forEach(function(opt,oi){
+      var b=document.createElement('button'); b.className='opt';
+      var mk=document.createElement('span'); mk.className='mk'; mk.textContent=letters[oi];
+      var sp=document.createElement('span'); sp.textContent=opt;
+      b.appendChild(mk); b.appendChild(sp);
+      b.onclick=function(){
+        if(card.dataset.done) return;
+        card.dataset.done='1'; answered++;
+        var all=opts.querySelectorAll('.opt');
+        all.forEach(function(x){x.classList.add('locked')});
+        all[q.richtig].classList.add('correct');
+        if(oi===q.richtig){correct++;}
+        else{b.classList.add('wrong');}
+        card.querySelector('.expl').classList.add('show');
+        document.getElementById('scoreNum').textContent=correct;
+        if(answered===quiz.length){ showFinal(); }
+      };
+      opts.appendChild(b);
+    });
+    card.appendChild(opts);
+    var ex=document.createElement('div'); ex.className='expl';
+    ex.innerHTML='<b>Erklärung:</b> '+q.erkl;
+    card.appendChild(ex);
+    box.appendChild(card);
+  });
+})();
+
+function showFinal(){
+  var box=document.getElementById('quiz');
+  var f=document.createElement('div'); f.className='qcard';
+  f.style.borderColor='#16A34A'; f.style.background='#F1FAF4';
+  var pct=Math.round(correct/quiz.length*100);
+  var msg = pct===100 ? 'Perfekt – du hast alle Normalformen sicher drauf!' :
+            pct>=70 ? 'Stark! Die Grundlagen sitzen, schau dir die verpassten Fälle nochmal an.' :
+            'Guter Anfang – geh die markierten Stufen oben nochmal in Ruhe durch.';
+  f.innerHTML='<div class=&quot;qtext&quot; style=&quot;margin:0&quot;>Ergebnis: '+correct+' / '+quiz.length+' ('+pct+'%)</div>'+
+              '<p style=&quot;margin:10px 0 0;font-family:var(--font-body);color:var(--ink-soft)&quot;>'+msg+'</p>';
+  box.appendChild(f);
+  f.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ---------- ZERLEGUNGS-TRAINER ---------- */
+var attrs=[
+  {attr:&quot;Gastname&quot;,      det:&quot;GastID&quot;},
+  {attr:&quot;GastPLZ&quot;,       det:&quot;GastID&quot;},
+  {attr:&quot;GastOrt&quot;,       det:&quot;GastPLZ&quot;},
+  {attr:&quot;ZimmerTyp&quot;,     det:&quot;ZimmerNr&quot;},
+  {attr:&quot;Hotel&quot;,         det:&quot;ZimmerNr&quot;},
+  {attr:&quot;PreisKategorie&quot;,det:&quot;ZimmerTyp&quot;},
+  {attr:&quot;HotelTelefon&quot;,  det:&quot;Hotel&quot;}
+];
+var determinanten=[&quot;BuchungsNr&quot;,&quot;GastID&quot;,&quot;GastPLZ&quot;,&quot;ZimmerNr&quot;,&quot;ZimmerTyp&quot;,&quot;Hotel&quot;];
+var picks={};
+
+(function renderTrainer(){
+  var box=document.getElementById('trainer');
+  attrs.forEach(function(row,ri){
+    var r=document.createElement('div'); r.className='tr-row'; r.dataset.idx=ri;
+    var lhs=document.createElement('div'); lhs.className='lhs';
+    var an=document.createElement('span'); an.className='an'; an.textContent=row.attr;
+    var lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent='hängt voll ab von →';
+    lhs.appendChild(an); lhs.appendChild(lbl); r.appendChild(lhs);
+    var dets=document.createElement('div'); dets.className='dets';
+    determinanten.forEach(function(d){
+      var p=document.createElement('button'); p.className='det-pill'; p.textContent=d;
+      p.onclick=function(){
+        dets.querySelectorAll('.det-pill').forEach(function(x){x.classList.remove('sel')});
+        p.classList.add('sel'); picks[ri]=d;
+        r.classList.remove('ok','no');
+        var v=r.querySelector('.verdict'); if(v) v.remove();
+      };
+      dets.appendChild(p);
+    });
+    r.appendChild(dets);
+    box.appendChild(r);
+  });
+})();
+
+function checkTrainer(){
+  var rows=document.querySelectorAll('#trainer .tr-row');
+  var allRight=true, allPicked=true;
+  rows.forEach(function(r){
+    var ri=+r.dataset.idx;
+    var old=r.querySelector('.verdict'); if(old) old.remove();
+    r.classList.remove('ok','no');
+    if(picks[ri]===undefined){allPicked=false; return;}
+    var v=document.createElement('span'); v.className='verdict';
+    if(picks[ri]===attrs[ri].det){ r.classList.add('ok'); v.textContent='✓'; v.style.color='#16A34A'; }
+    else{ r.classList.add('no'); v.textContent='✗'; v.style.color='#D4423C'; allRight=false; }
+    r.appendChild(v);
+  });
+  var res=document.getElementById('trResult');
+  if(!allPicked){
+    res.classList.add('show');
+    res.style.background='#FBF0DC'; res.style.borderColor='#E5C485';
+    res.innerHTML='<h4 style=&quot;color:#B45309&quot;>Noch nicht vollständig</h4><p style=&quot;margin:0;font-family:var(--font-body);color:var(--ink-soft)&quot;>Ordne zuerst jedem Attribut eine Determinante zu, dann prüfe erneut.</p>';
+    return;
+  }
+  res.classList.add('show');
+  if(allRight){
+    res.style.background='color-mix(in srgb,#16A34A 6%,#fff)'; res.style.borderColor='color-mix(in srgb,#16A34A 25%,#E3E6EC)';
+    res.innerHTML='<h4>Richtig zerlegt – das ist die 3NF (= BCNF = 5NF)!</h4>'+
+      '<p style=&quot;font-family:var(--font-body);color:var(--ink-soft);margin:0 0 14px&quot;>Gruppierst du die Attribute nach ihrer Determinante, entstehen genau diese sechs Relationen:</p>'+
+      relHTML();
+  }else{
+    res.style.background='#FDF1F1'; res.style.borderColor='#E9A8A4';
+    res.innerHTML='<h4 style=&quot;color:#B4231F&quot;>Fast! Die rot markierten Zeilen stimmen noch nicht.</h4>'+
+      '<p style=&quot;margin:0;font-family:var(--font-body);color:var(--ink-soft)&quot;>Denk dran: Die Determinante ist das, <em>von dem</em> das Attribut direkt abhängt. Beispiel: GastOrt hängt von der PLZ ab, nicht direkt von der GastID. Korrigiere und prüfe nochmal.</p>';
+  }
+}
+
+function relHTML(){
+  var rels=[
+    [&quot;BUCHUNG&quot;,[&quot;BuchungsNr|pk&quot;,&quot;GastID|fk&quot;,&quot;ZimmerNr|fk&quot;]],
+    [&quot;GAST&quot;,[&quot;GastID|pk&quot;,&quot;Gastname|&quot;,&quot;GastPLZ|fk&quot;]],
+    [&quot;ORT&quot;,[&quot;GastPLZ|pk&quot;,&quot;GastOrt|&quot;]],
+    [&quot;ZIMMER&quot;,[&quot;ZimmerNr|pk&quot;,&quot;ZimmerTyp|fk&quot;,&quot;Hotel|fk&quot;]],
+    [&quot;ZIMMERTYP&quot;,[&quot;ZimmerTyp|pk&quot;,&quot;PreisKategorie|&quot;]],
+    [&quot;HOTEL&quot;,[&quot;Hotel|pk&quot;,&quot;HotelTelefon|&quot;]]
+  ];
+  return rels.map(function(r){
+    var chips=r[1].map(function(a){
+      var parts=a.split('|'); var cls=parts[1]==='pk'?'at pk':parts[1]==='fk'?'at fk':'at';
+      return '<span class=&quot;'+cls+'&quot;>'+parts[0]+'</span>';
+    }).join('');
+    return '<div class=&quot;rel&quot;><span class=&quot;rn&quot; style=&quot;color:#16A34A&quot;>'+r[0]+'</span>'+chips+'</div>';
+  }).join('');
+}
+
+function resetTrainer(){
+  picks={};
+  document.querySelectorAll('#trainer .tr-row').forEach(function(r){
+    r.classList.remove('ok','no');
+    var v=r.querySelector('.verdict'); if(v) v.remove();
+    r.querySelectorAll('.det-pill').forEach(function(x){x.classList.remove('sel')});
+  });
+  document.getElementById('trResult').classList.remove('show');
+}
+</script>
+</body>
+</html>
+"></iframe>
+  </section>
+
+  <footer>
+    <p class="mono">Normalisierungs-Labor · die Prüf-Logik nutzt Attributhüllen, Schlüsselsuche, 2NF/3NF/BCNF-Tests, die Date-Fagin-Bedingung für 4NF/5NF und den Tableau-Chase für Verlustfreiheit.</p>
+  </footer>
+</div>
+
+<script>
+/* =====================================================================
+   RELATIONALE ENGINE  (Kern: prüft Normalformen anhand der FDs)
+   ===================================================================== */
+function arrEq(a,b){return a.length===b.length&&a.every(x=>b.includes(x))&&b.every(x=>a.includes(x));}
+function subsetArr(a,b){return a.every(x=>b.includes(x));} // a ⊆ b
+function fdKey(fd){return [...fd.lhs].sort().join(',')+'>'+[...fd.rhs].sort().join(',');}
+
+function closure(X, fds){
+  const s=new Set(X); let changed=true;
+  while(changed){ changed=false;
+    for(const fd of fds){
+      if(fd.lhs.every(a=>s.has(a)) && !fd.rhs.every(a=>s.has(a))){
+        fd.rhs.forEach(a=>{ if(!s.has(a)){s.add(a);changed=true;} });
+      }
+    }
+  }
+  return s;
+}
+function isSuperkey(X, R, fds){ const c=closure(X,fds); return R.every(a=>c.has(a)); }
+
+function nonEmptySubsets(arr){ // bitmask
+  const res=[],n=arr.length;
+  for(let m=1;m<(1<<n);m++){ const s=[]; for(let i=0;i<n;i++) if(m&(1<<i)) s.push(arr[i]); res.push(s); }
+  return res;
+}
+function properNonEmptySubsets(arr){ return nonEmptySubsets(arr).filter(s=>s.length<arr.length); }
+
+function candidateKeys(R, fds){
+  if(R.length>15){ // guard: nur einen Schlüssel heuristisch finden
+    let k=[...R];
+    for(const a of R){ const t=k.filter(x=>x!==a); if(isSuperkey(t,R,fds)) k=t; }
+    return [k];
+  }
+  const subs=nonEmptySubsets(R).sort((a,b)=>a.length-b.length);
+  const keys=[];
+  for(const S of subs){
+    if(keys.some(k=>subsetArr(k,S))) continue; // nicht minimal
+    if(isSuperkey(S,R,fds)) keys.push(S);
+  }
+  return keys.length?keys:[[...R]];
+}
+function primeSet(R, keys){ const p=new Set(); keys.forEach(k=>k.forEach(a=>p.add(a))); return p; }
+
+function minimalFilter(vs){
+  const ded=[]; const seen=new Set();
+  for(const v of vs){ const k=fdKey(v); if(!seen.has(k)){seen.add(k);ded.push(v);} }
+  return ded.filter(v=> !ded.some(o=> o!==v && arrEq(o.rhs,v.rhs) && o.lhs.length<v.lhs.length && subsetArr(o.lhs,v.lhs)));
+}
+
+/* --- per-Relation NF-Tests; geben verletzende FDs zurück --- */
+function test2NF(R,fds,keys,prime){
+  const v=[];
+  for(const K of keys){
+    if(K.length<2) continue;
+    for(const X of properNonEmptySubsets(K)){
+      const cl=closure(X,fds);
+      for(const A of R){
+        if(X.includes(A)||prime.has(A)) continue;
+        if(cl.has(A)) v.push({lhs:X,rhs:[A]});
+      }
+    }
+  }
+  return minimalFilter(v);
+}
+function test3NF(R,fds,keys,prime){
+  const v=[];
+  for(const X of properNonEmptySubsets(R)){
+    if(isSuperkey(X,R,fds)) continue;
+    const cl=closure(X,fds);
+    for(const A of R){
+      if(X.includes(A)||!cl.has(A)) continue;
+      if(!prime.has(A)) v.push({lhs:X,rhs:[A]});
+    }
+  }
+  return minimalFilter(v);
+}
+function testBCNF(R,fds,keys){
+  const v=[];
+  for(const X of properNonEmptySubsets(R)){
+    if(isSuperkey(X,R,fds)) continue;
+    const cl=closure(X,fds);
+    for(const A of R){
+      if(X.includes(A)||!cl.has(A)) continue;
+      v.push({lhs:X,rhs:[A]});
+    }
+  }
+  return minimalFilter(v);
+}
+/* 4NF/5NF: sichere Bedingungen (Date-Fagin) */
+function status45(R,fds,keys,bcnfViol){
+  if(R.length<=2) return {nf4:'ok',nf5:'ok'};
+  const allSimple=keys.every(k=>k.length===1);
+  if(bcnfViol.length===0 && allSimple) return {nf4:'ok',nf5:'ok'}; // garantiert
+  if(bcnfViol.length>0) return {nf4:'after',nf5:'after'}; // erst BCNF herstellen
+  // BCNF ok, aber zusammengesetzter Schlüssel → mögliche MVD/JD
+  return {nf4:'manual',nf5:'manual'};
+}
+
+/* --- Verlustfreiheit: Tableau-Chase --- */
+function losslessJoin(univ, rels, fds){
+  if(rels.length<=1) return true;
+  const val=rels.map((R,i)=>{ const o={}; univ.forEach(A=>{ o[A]= R.includes(A)?('a_'+A):('b_'+i+'_'+A); }); return o; });
+  let changed=true, guard=0;
+  while(changed && guard++<2000){
+    changed=false;
+    for(const fd of fds){
+      const groups={};
+      for(let i=0;i<val.length;i++){ const k=fd.lhs.map(a=>val[i][a]).join('|'); (groups[k]=groups[k]||[]).push(i); }
+      for(const g in groups){
+        const idx=groups[g]; if(idx.length<2) continue;
+        for(const A of fd.rhs){
+          let target=null;
+          for(const i of idx){ if(val[i][A]==='a_'+A){target='a_'+A;break;} }
+          if(!target) target=val[idx[0]][A];
+          for(const i of idx){
+            if(val[i][A]!==target){ const old=val[i][A];
+              for(let r=0;r<val.length;r++){ if(val[r][A]===old) val[r][A]=target; }
+              changed=true;
+            }
+          }
+        }
+      }
+    }
+  }
+  return val.some(row=>univ.every(A=>row[A]==='a_'+A));
+}
+
+/* --- Abhängigkeitstreue (Info) --- */
+function dependencyPreserved(univ, rels, fds){
+  for(const fd of fds){
+    let Z=new Set(fd.lhs), changed=true;
+    while(changed){ changed=false;
+      for(const R of rels){
+        const inter=R.filter(a=>Z.has(a));
+        const cl=closure(inter,fds);
+        R.forEach(a=>{ if(cl.has(a)&&!Z.has(a)){Z.add(a);changed=true;} });
+      }
+    }
+    if(!fd.rhs.every(a=>Z.has(a))) return false;
+  }
+  return true;
+}
+
+/* =====================================================================
+   STATE + UI: PRÜFER
+   ===================================================================== */
+const S={attrs:[],fds:[],relations:[],selRel:null,target:'3NF',data:null,
+         lhsSel:new Set(),rhsSel:new Set(),relSeq:0};
+
+function setMode(m){
+  document.getElementById('mode-simple').classList.toggle('on',m==='simple');
+  document.getElementById('mode-excel').classList.toggle('on',m==='excel');
+  document.getElementById('simpleInput').style.display=m==='simple'?'block':'none';
+  document.getElementById('excelInput').style.display=m==='excel'?'block':'none';
+}
+
+function addCols(){
+  const raw=document.getElementById('colInput').value;
+  const cols=raw.split(/[,;\n\t]+/).map(s=>s.trim()).filter(Boolean);
+  if(!cols.length) return;
+  cols.forEach(c=>{ if(!S.attrs.includes(c)) S.attrs.push(c); });
+  document.getElementById('colInput').value='';
+  afterAttrsChanged();
+}
+function removeCol(c){
+  S.attrs=S.attrs.filter(x=>x!==c);
+  S.fds=S.fds.filter(fd=>!fd.lhs.includes(c)&&!fd.rhs.includes(c));
+  S.relations.forEach(r=>r.attrs=r.attrs.filter(a=>a.name!==c));
+  S.lhsSel.delete(c); S.rhsSel.delete(c);
+  afterAttrsChanged();
+}
+function afterAttrsChanged(){
+  renderColChips(); renderFDBuilder(); renderFDList(); renderPool(); renderRelations(); renderNFBtns(); updateKeyInfo();
+  const has=S.attrs.length>0;
+  document.getElementById('fdCard').style.display=has?'block':'none';
+  document.getElementById('buildCard').style.display=has?'block':'none';
+}
+function renderColChips(){
+  const box=document.getElementById('colChips'); box.innerHTML='';
+  S.attrs.forEach(c=>{
+    const el=document.createElement('span'); el.className='chip';
+    el.innerHTML='<span>'+esc(c)+'</span><span class="x" title="entfernen">×</span>';
+    el.querySelector('.x').onclick=()=>removeCol(c);
+    box.appendChild(el);
+  });
+}
+
+/* FD builder */
+function renderFDBuilder(){
+  const L=document.getElementById('lhsChips'),Rb=document.getElementById('rhsChips');
+  L.innerHTML='';Rb.innerHTML='';
+  S.attrs.forEach(a=>{
+    const l=document.createElement('span'); l.className='chip'+(S.lhsSel.has(a)?' sel':''); l.textContent=a;
+    l.onclick=()=>{ S.lhsSel.has(a)?S.lhsSel.delete(a):S.lhsSel.add(a); renderFDBuilder(); };
+    L.appendChild(l);
+    const r=document.createElement('span'); r.className='chip'+(S.rhsSel.has(a)?' sel':''); r.textContent=a;
+    r.onclick=()=>{ S.rhsSel.has(a)?S.rhsSel.delete(a):S.rhsSel.add(a); renderFDBuilder(); };
+    Rb.appendChild(r);
+  });
+}
+function addFD(){
+  const lhs=[...S.lhsSel],rhs=[...S.rhsSel].filter(a=>!lhs.includes(a));
+  if(!lhs.length||!rhs.length){ flash('Bitte links und rechts je mindestens eine Spalte wählen.'); return; }
+  const fd={lhs,rhs};
+  if(S.fds.some(f=>fdKey(f)===fdKey(fd))){ flash('Diese Abhängigkeit gibt es schon.'); return; }
+  S.fds.push(fd); S.lhsSel.clear(); S.rhsSel.clear();
+  renderFDBuilder(); renderFDList(); updateKeyInfo();
+}
+function renderFDList(){
+  const box=document.getElementById('fdList'); box.innerHTML='';
+  if(!S.fds.length){ box.innerHTML='<p class="hint">Noch keine Abhängigkeiten. Ohne sie kann nur die 1NF geprüft werden.</p>'; return; }
+  S.fds.forEach((fd,i)=>{
+    const row=document.createElement('div'); row.className='fdrow';
+    row.innerHTML='<span class="det">'+fd.lhs.map(esc).join(', ')+'</span><span class="arr">→</span><span class="dep">'+fd.rhs.map(esc).join(', ')+'</span><span class="del" title="löschen">×</span>';
+    row.querySelector('.del').onclick=()=>{ S.fds.splice(i,1); renderFDList(); updateKeyInfo(); };
+    box.appendChild(row);
+  });
+}
+function updateKeyInfo(){
+  const box=document.getElementById('keyInfo');
+  if(!S.fds.length||!S.attrs.length){ box.style.display='none'; return; }
+  const keys=candidateKeys(S.attrs,S.fds);
+  box.style.display='block';
+  box.innerHTML='<b>Schlüsselkandidat(en) der Gesamttabelle:</b> '+keys.map(k=>'{'+k.join(', ')+'}').join('  ·  ')+
+    '  — Primattribute: '+[...primeSet(S.attrs,keys)].join(', ');
+}
+
+/* Excel / CSV */
+function handleFile(file){
+  if(!file) return;
+  document.getElementById('fileErr').textContent='';
+  const name=file.name.toLowerCase();
+  const reader=new FileReader();
+  if(name.endsWith('.csv')){
+    reader.onload=e=>parseTable(csvToRows(e.target.result));
+    reader.readAsText(file);
+  } else {
+    if(typeof XLSX==='undefined'){ document.getElementById('fileErr').textContent='Excel-Bibliothek konnte nicht geladen werden. Speichere die Tabelle als CSV und lade sie erneut hoch.'; return; }
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false});
+        parseTable(rows);
+      }catch(err){ document.getElementById('fileErr').textContent='Datei konnte nicht gelesen werden: '+err.message; }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+function csvToRows(text){
+  return text.split(/\r?\n/).filter(l=>l.trim()).map(l=>{
+    // einfacher CSV-Parser (Komma oder Semikolon)
+    const sep=l.includes(';')&&!l.includes(',')?';':',';
+    return l.split(sep).map(c=>c.replace(/^"|"$/g,'').trim());
+  });
+}
+function parseTable(rows){
+  if(!rows||!rows.length){ document.getElementById('fileErr').textContent='Keine Daten gefunden.'; return; }
+  const header=rows[0].map(h=>String(h).trim()).filter(Boolean);
+  S.attrs=[...new Set(header)];
+  const body=rows.slice(1).map(r=>{ const o={}; header.forEach((h,i)=>o[h]=r[i]!==undefined?String(r[i]):''); return o; });
+  S.data=body.length?body:null;
+  renderPreview(header,body);
+  afterAttrsChanged();
+  if(S.data) suggestFDs();
+}
+function renderPreview(header,body){
+  const box=document.getElementById('preview');
+  if(!header.length){box.innerHTML='';return;}
+  let h='<div class="tbl-prev"><table class="prev"><tr>'+header.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
+  body.slice(0,4).forEach(r=>{ h+='<tr>'+header.map(c=>'<td>'+esc(r[c]||'')+'</td>').join('')+'</tr>'; });
+  h+='</table></div><p class="hint">'+header.length+' Spalten · '+body.length+' Datenzeilen erkannt.</p>';
+  box.innerHTML=h;
+}
+
+/* FD-Vorschläge aus Daten (Determinanten der Größe 1 und 2) */
+function holdsInData(det,dep,data){
+  const map={};
+  for(const row of data){
+    const k=det.map(a=>row[a]).join('§');
+    if(map[k]!==undefined && map[k]!==row[dep]) return false;
+    map[k]=row[dep];
+  }
+  return true;
+}
+function suggestFDs(){
+  const data=S.data, A=S.attrs, found=[];
+  const dets=[];
+  A.forEach(a=>dets.push([a]));
+  for(let i=0;i<A.length;i++) for(let j=i+1;j<A.length;j++) dets.push([A[i],A[j]]);
+  for(const det of dets){
+    for(const dep of A){
+      if(det.includes(dep)) continue;
+      if(holdsInData(det,dep,data)){
+        // nur minimale Determinanten: existiert echte Teilmenge die schon dep bestimmt?
+        const smaller=found.some(f=>f.rhs[0]===dep && f.lhs.length<det.length && subsetArr(f.lhs,det));
+        if(!smaller) found.push({lhs:det,rhs:[dep]});
+      }
+    }
+  }
+  // gleiche Determinante zusammenfassen
+  const grouped={};
+  found.forEach(f=>{ const k=f.lhs.slice().sort().join(','); (grouped[k]=grouped[k]||{lhs:f.lhs,rhs:[]}); grouped[k].rhs.push(f.rhs[0]); });
+  const sugs=Object.values(grouped);
+  renderSuggestions(sugs);
+}
+function renderSuggestions(sugs){
+  const box=document.getElementById('sugBox');
+  if(!sugs.length){ box.innerHTML=''; return; }
+  let h='<div class="infoline" style="margin-top:16px"><b>Aus den Daten erkannt</b> — prüfe semantisch, ob jede Regel <i>dauerhaft</i> gilt oder nur zufällig in diesen Zeilen steht. Übernimm die strukturellen.</div>';
+  sugs.forEach((s,i)=>{
+    h+='<div class="fdrow sug"><span class="det">'+s.lhs.map(esc).join(', ')+'</span><span class="arr">→</span><span class="dep">'+s.rhs.map(esc).join(', ')+'</span>'+
+       '<button class="btn btn-pri btn-sm" style="margin-left:auto" onclick="acceptSug('+i+')">übernehmen</button></div>';
+  });
+  box.innerHTML=h;
+  box._sugs=sugs;
+}
+function acceptSug(i){
+  const s=document.getElementById('sugBox')._sugs[i];
+  s.rhs.forEach(dep=>{ const fd={lhs:s.lhs,rhs:[dep]}; if(!S.fds.some(f=>fdKey(f)===fdKey(fd))) S.fds.push(fd); });
+  renderFDList(); updateKeyInfo();
+}
+
+/* Zielnormalform */
+const NF_ORDER=['1NF','2NF','3NF','BCNF','4NF','5NF'];
+const NF_COLORS={'1NF':'var(--blue)','2NF':'var(--teal)','3NF':'var(--violet)','BCNF':'var(--amber)','4NF':'var(--rose)','5NF':'var(--green)'};
+function renderNFBtns(){
+  const box=document.getElementById('nfbtns'); box.innerHTML='';
+  NF_ORDER.forEach(nf=>{
+    const b=document.createElement('button'); b.className='nfbtn'+(S.target===nf?' on':''); b.textContent=nf;
+    if(S.target===nf){ b.style.background=NF_COLORS[nf]; b.style.borderColor=NF_COLORS[nf]; }
+    b.onclick=()=>{ S.target=nf; renderNFBtns(); };
+    box.appendChild(b);
+  });
+}
+
+/* Relationen bauen */
+function addRelation(){
+  const id=++S.relSeq;
+  S.relations.push({id,name:'R'+S.relations.length+1<10?('R'+(S.relations.length+1)):('R'+(S.relations.length+1)),attrs:[]});
+  S.relations[S.relations.length-1].name='Relation '+(S.relations.length);
+  S.selRel=id; renderRelations();
+}
+function selectRel(id){ S.selRel=id; renderRelations(); }
+function addAttrToSel(attr){
+  if(S.selRel==null){ if(S.relations.length===0) addRelation(); else S.selRel=S.relations[S.relations.length-1].id; }
+  const r=S.relations.find(x=>x.id===S.selRel); if(!r) return;
+  if(!r.attrs.some(a=>a.name===attr)) r.attrs.push({name:attr,key:false});
+  renderRelations();
+}
+function cycleAttr(relId,attr){
+  const r=S.relations.find(x=>x.id===relId); const a=r.attrs.find(x=>x.name===attr);
+  a.key=!a.key; renderRelations();
+}
+function removeAttr(relId,attr){
+  const r=S.relations.find(x=>x.id===relId); r.attrs=r.attrs.filter(a=>a.name!==attr); renderRelations();
+}
+function removeRel(id){ S.relations=S.relations.filter(r=>r.id!==id); if(S.selRel===id)S.selRel=null; renderRelations(); }
+function renameRel(id,val){ const r=S.relations.find(x=>x.id===id); if(r)r.name=val; }
+function resetRelations(){ S.relations=[]; S.selRel=null; document.getElementById('report').innerHTML=''; renderRelations(); }
+
+function renderPool(){
+  const box=document.getElementById('poolChips'); box.innerHTML='';
+  S.attrs.forEach(a=>{
+    const c=document.createElement('span'); c.className='chip'; c.textContent=a;
+    c.onclick=()=>addAttrToSel(a);
+    box.appendChild(c);
+  });
+}
+function renderRelations(){
+  const box=document.getElementById('relGrid'); box.innerHTML='';
+  S.relations.forEach(r=>{
+    const card=document.createElement('div'); card.className='relcard'+(S.selRel===r.id?' sel':'');
+    card.onclick=(e)=>{ if(e.target.tagName!=='INPUT'&&!e.target.classList.contains('x')&&!e.target.classList.contains('rdel')) selectRel(r.id); };
+    const head=document.createElement('div'); head.className='rh';
+    const inp=document.createElement('input'); inp.value=r.name; inp.onchange=()=>renameRel(r.id,inp.value);
+    const del=document.createElement('span'); del.className='rdel'; del.textContent='×'; del.title='Relation löschen'; del.onclick=()=>removeRel(r.id);
+    head.appendChild(inp); head.appendChild(del); card.appendChild(head);
+    if(!r.attrs.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='leer'; card.appendChild(e); }
+    else{
+      const ch=document.createElement('div'); ch.className='chips';
+      r.attrs.forEach(a=>{
+        const el=document.createElement('span'); el.className='chip'+(a.key?' pk':'');
+        el.innerHTML='<span>'+esc(a.name)+(a.key?' 🔑':'')+'</span><span class="x">×</span>';
+        el.querySelector('span').onclick=(ev)=>{ev.stopPropagation();cycleAttr(r.id,a.name);};
+        el.querySelector('.x').onclick=(ev)=>{ev.stopPropagation();removeAttr(r.id,a.name);};
+        ch.appendChild(el);
+      });
+      card.appendChild(ch);
+    }
+    box.appendChild(card);
+  });
+}
+
+/* ---------- PRÜFEN ---------- */
+function runCheck(){
+  const rep=document.getElementById('report');
+  if(!S.attrs.length){ rep.innerHTML='<div class="infoline">Bitte zuerst Spalten eingeben.</div>'; return; }
+  if(!S.relations.length){ rep.innerHTML='<div class="infoline">Lege mindestens eine Relation an und verteile die Attribute.</div>'; return; }
+  const target=S.target;
+
+  // Abdeckung prüfen
+  const covered=new Set(); S.relations.forEach(r=>r.attrs.forEach(a=>covered.add(a.name)));
+  const missing=S.attrs.filter(a=>!covered.has(a));
+
+  // FDs nötig ab 2NF
+  if(target!=='1NF' && !S.fds.length){
+    rep.innerHTML='<div class="infoline">Für '+target+' brauchst du funktionale Abhängigkeiten (Schritt 2). Ohne sie lässt sich nur die 1NF beurteilen.</div>';
+    return;
+  }
+
+  const relAttrLists=S.relations.map(r=>r.attrs.map(a=>a.name));
+  const lossless = S.fds.length? losslessJoin(S.attrs, relAttrLists, S.fds) : (missing.length===0 && S.relations.length===1);
+  const depPres = S.fds.length? dependencyPreserved(S.attrs, relAttrLists, S.fds) : true;
+
+  // pro Relation
+  let allOk=true; const relReports=[];
+  let highestIdx=5; // index in NF_ORDER der höchsten erfüllten NF (über alle Relationen min.)
+  S.relations.forEach(r=>{
+    const R=r.attrs.map(a=>a.name);
+    if(!R.length){ relReports.push({r,empty:true}); allOk=false; return; }
+    const keys=candidateKeys(R,S.fds);
+    const prime=primeSet(R,keys);
+    const v2=test2NF(R,S.fds,keys,prime);
+    const v3=test3NF(R,S.fds,keys,prime);
+    const vB=testBCNF(R,S.fds,keys);
+    const s45=status45(R,S.fds,keys,vB);
+    // höchste erfüllte NF dieser Relation
+    let hi;
+    if(vB.length===0){ hi = (s45.nf5==='ok')?5 : (s45.nf4==='ok'?4:3); }
+    else if(v3.length===0) hi=2; // BCNF verletzt aber 3NF ok → in 3NF; index 2
+    else if(v2.length===0) hi=1; // 2NF ok, 3NF verletzt → index1
+    else hi=0; // nur 1NF
+    // Achtung: index mapping: 0=1NF,1=2NF,2=3NF,3=BCNF,4=4NF,5=5NF
+    // Korrektur: wenn v3.length===0 && vB.length>0 → 3NF (idx2). wenn vB.length===0 → mind. BCNF (idx3) plus evtl 4/5
+    if(vB.length===0){ hi=3; if(s45.nf4==='ok')hi=4; if(s45.nf5==='ok')hi=5; }
+    highestIdx=Math.min(highestIdx,hi);
+
+    // Verletzungen relativ zur Zielnorm
+    let viols=[],okFor=true;
+    if(target==='2NF'){ viols=v2; }
+    else if(target==='3NF'){ viols=v2.length?v2:v3; }
+    else if(target==='BCNF'){ viols=v2.length?v2:(v3.length?v3:vB); }
+    else if(target==='4NF'||target==='5NF'){ viols=v2.length?v2:(v3.length?v3:vB); }
+    okFor = viols.length===0;
+    if(!okFor) allOk=false;
+    relReports.push({r,R,keys,prime,viols,okFor,vB,s45,target});
+  });
+
+  if(missing.length) allOk=false;
+  const validDecomp = allOk && lossless && missing.length===0;
+
+  // ---- Rendern ----
+  let html='';
+  // höchste NF
+  const highName=NF_ORDER[highestIdx];
+  html+='<div class="highest">Höchste von allen Relationen erfüllte Normalform: <b style="color:'+NF_COLORS[highName]+'">'+highName+'</b>'+
+        ((highestIdx>=3 && relReports.some(rr=>rr.s45 && (rr.s45.nf5==='manual'||rr.s45.nf4==='manual')))?'  · 4NF/5NF teils manuell zu prüfen':'')+'</div>';
+
+  // Hauptverdikt
+  if(validDecomp){
+    html+='<div class="verdict-big ok"><div class="mk">✓</div><div><div class="t">Deine Zerlegung erfüllt die '+target+'.</div><div class="s">Jede Relation besteht den Test und die Zerlegung ist verlustfrei.</div></div></div>';
+  } else {
+    let why=[];
+    if(missing.length) why.push(missing.length+' Attribut(e) fehlen');
+    if(!allOk && !missing.length) why.push('mindestens eine Relation verletzt die '+target);
+    if(S.fds.length && !lossless) why.push('die Zerlegung ist nicht verlustfrei');
+    html+='<div class="verdict-big bad"><div class="mk">✗</div><div><div class="t">Noch nicht in '+target+'.</div><div class="s">'+why.join(' · ')+'.</div></div></div>';
+  }
+
+  if(missing.length){
+    html+='<div class="relreport" style="--c:var(--red)"><div class="viol">Diese Attribute kommen in <b>keiner</b> Relation vor und gingen verloren: <b>'+missing.join(', ')+'</b>. Jede Spalte muss in mindestens einer Relation auftauchen.</div></div>';
+  }
+
+  // Verlustfreiheit
+  if(S.fds.length){
+    if(lossless){
+      html+='<div class="infoline">✓ <b>Verlustfrei:</b> Beim Zusammenfügen (Join) der Relationen entstehen genau die ursprünglichen Daten – keine Geister-Zeilen.</div>';
+    } else {
+      html+='<div class="relreport" style="--c:var(--red)"><div class="viol"><b>Nicht verlustfrei.</b> Joint man die Relationen wieder zusammen, entstehen zusätzliche, falsche Zeilen. Faustregel: Die gemeinsamen Attribute zweier Relationen müssen in (mindestens) einer davon ein Schlüssel sein. Häufige Ursache: das verbindende Attribut (Fremdschlüssel) fehlt in einer der Relationen.</div></div>';
+    }
+    if(!depPres && (target==='3NF')){
+      html+='<div class="infoline" style="border-color:color-mix(in srgb,var(--amber) 22%,var(--line));background:color-mix(in srgb,var(--amber) 5%,#fff)">⚠ Hinweis: Diese Zerlegung ist nicht abhängigkeitstreu – eine FD lässt sich nur über einen Join prüfen. Die 3NF ist trotzdem erfüllbar; für volle Treue ggf. anders schneiden.</div>';
+    }
+  }
+
+  // pro Relation
+  relReports.forEach(rr=>{
+    if(rr.empty){ html+='<div class="relreport" style="--c:var(--red)"><div class="rname">'+esc(rr.r.name)+' <span class="badge bad">leer</span></div><div class="viol">Diese Relation hat keine Attribute.</div></div>'; return; }
+    const col=rr.okFor?'var(--green)':'var(--red)';
+    html+='<div class="relreport" style="--c:'+col+'">';
+    html+='<div class="rname"><span class="v">'+(rr.okFor?'✓':'✗')+'</span> '+esc(rr.r.name)+' <span class="badge '+(rr.okFor?'ok':'bad')+'">'+(rr.okFor?'in '+rr.target:rr.target+' verletzt')+'</span></div>';
+    html+='<div class="meta">Attribute: '+rr.R.join(', ')+'</div>';
+    html+='<div class="meta">Schlüsselkandidat(en): '+rr.keys.map(k=>'{'+k.join(', ')+'}').join('  ·  ')+'</div>';
+    if(rr.okFor){
+      // positive Erklärung + 4/5NF status
+      if(rr.target==='4NF'||rr.target==='5NF'){
+        const st=rr.target==='5NF'?rr.s45.nf5:rr.s45.nf4;
+        if(st==='ok') html+='<div class="good-note">Erfüllt: '+(rr.R.length<=2?'binäre Relation – automatisch in 4NF und 5NF.':'in BCNF mit einfachem Schlüssel → nach Date-Fagin garantiert in 4NF und 5NF.')+'</div>';
+        else if(st==='manual') html+='<div class="infoline" style="margin:8px 0 0">In BCNF, aber zusammengesetzter Schlüssel über alle Attribute: Hier <b>kann</b> eine mehrwertige- oder Verbundabhängigkeit stecken. Prüfe semantisch, ob sich die Relation verlustfrei in kleinere Teile zerlegen lässt – dann wäre '+rr.target+' verletzt.</div>';
+      } else {
+        html+='<div class="good-note">Alle Abhängigkeiten in dieser Relation gehen direkt vom Schlüssel aus.</div>';
+      }
+    } else {
+      rr.viols.forEach(v=>{
+        html+='<div class="viol">'+explainViol(rr.target,v,rr)+'</div>';
+      });
+    }
+    html+='</div>';
+  });
+
+  rep.innerHTML=html;
+  rep.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function explainViol(target,v,rr){
+  const X='{'+v.lhs.join(', ')+'}', A=v.rhs.join(', ');
+  const keyStr=rr.keys.map(k=>'{'+k.join(', ')+'}').join(' / ');
+  if(target==='2NF'){
+    return 'Partielle Abhängigkeit: <b>'+X+' → '+A+'</b>. Das Nicht-Schlüsselattribut <b>'+A+'</b> hängt nur von einem <i>Teil</i> des Schlüssels '+keyStr+' ab. → Lagere '+X+' samt der davon abhängigen Attribute in eine eigene Relation aus.';
+  }
+  if(target==='3NF'){
+    return 'Transitive Abhängigkeit: <b>'+X+' → '+A+'</b>. '+X+' ist kein Schlüssel und <b>'+A+'</b> kein Schlüsselattribut – '+A+' hängt also über einen Umweg vom Schlüssel ab. → Eigene Relation mit Schlüssel '+X+'.';
+  }
+  if(target==='BCNF'){
+    return 'BCNF-Verletzung: <b>'+X+' → '+A+'</b>. '+X+' ist eine Determinante, aber kein Schlüsselkandidat. → Zerlege so, dass '+X+' in seiner eigenen Relation zum Schlüssel wird.';
+  }
+  // 4NF/5NF fallback (zeigt zuerst niedrigere Verletzung)
+  return 'Zuerst niedrigere Normalform herstellen – es gilt noch <b>'+X+' → '+A+'</b> als problematische Abhängigkeit.';
+}
+
+function flash(msg){
+  const rep=document.getElementById('report');
+  // kleiner, nicht-blockierender Hinweis im FD-Bereich
+  let el=document.getElementById('flashMsg');
+  if(!el){ el=document.createElement('div'); el.id='flashMsg'; el.className='err'; document.getElementById('fdCard').appendChild(el); }
+  el.textContent=msg; clearTimeout(el._t); el._t=setTimeout(()=>el.textContent='',2600);
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ---------- Hotel-Beispiel ---------- */
+function loadExample(){
+  S.attrs=['BuchungsNr','GastID','Gastname','GastPLZ','GastOrt','ZimmerNr','ZimmerTyp','PreisKategorie','Hotel','HotelTelefon'];
+  S.fds=[
+    {lhs:['BuchungsNr'],rhs:['GastID','ZimmerNr']},
+    {lhs:['GastID'],rhs:['Gastname','GastPLZ']},
+    {lhs:['GastPLZ'],rhs:['GastOrt']},
+    {lhs:['ZimmerNr'],rhs:['ZimmerTyp','Hotel']},
+    {lhs:['ZimmerTyp'],rhs:['PreisKategorie']},
+    {lhs:['Hotel'],rhs:['HotelTelefon']}
+  ];
+  S.relations=[]; S.selRel=null; S.target='3NF'; S.data=null;
+  document.getElementById('report').innerHTML='';
+  afterAttrsChanged();
+}
+function autoSolve(){
+  if(!S.attrs.length||!S.fds.length){ flash('Erst Spalten und Abhängigkeiten festlegen.'); return; }
+  // Standard-Synthese: pro FD-Determinante eine Relation; plus Schlüssel-Relation
+  S.relations=[]; S.selRel=null;
+  const keys=candidateKeys(S.attrs,S.fds);
+  const pk=keys[0];
+  // gruppiere FDs nach Determinante
+  const byDet={};
+  S.fds.forEach(fd=>{ const k=fd.lhs.slice().sort().join(','); (byDet[k]=byDet[k]||{lhs:fd.lhs,rhs:new Set()}); fd.rhs.forEach(a=>byDet[k].rhs.add(a)); });
+  let seq=0;
+  Object.values(byDet).forEach(g=>{
+    const id=++S.relSeq; const attrs=[];
+    g.lhs.forEach(a=>attrs.push({name:a,key:true}));
+    [...g.rhs].forEach(a=>{ if(!g.lhs.includes(a)) attrs.push({name:a,key:false}); });
+    S.relations.push({id,name:nameFor(g.lhs),attrs});
+  });
+  // Schlüsselrelation, falls PK nicht schon als Determinante existiert mit allen FK
+  const detExists=Object.values(byDet).some(g=>arrEq(g.lhs,pk));
+  // BUCHUNG: pk + direkte FK (das was pk unmittelbar bestimmt)
+  const direct=S.fds.filter(fd=>arrEq(fd.lhs,pk)).flatMap(fd=>fd.rhs);
+  if(direct.length){
+    const id=++S.relSeq; const attrs=pk.map(a=>({name:a,key:true})).concat(direct.map(a=>({name:a,key:false})));
+    S.relations.unshift({id,name:nameFor(pk),attrs});
+  }
+  renderRelations();
+}
+function nameFor(lhs){
+  const map={GastID:'GAST',GastPLZ:'ORT',ZimmerNr:'ZIMMER',ZimmerTyp:'ZIMMERTYP',Hotel:'HOTEL',BuchungsNr:'BUCHUNG'};
+  if(lhs.length===1&&map[lhs[0]]) return map[lhs[0]];
+  return lhs.join('_').toUpperCase();
+}
+
+/* =====================================================================
+   DIAGRAMM-FLÄCHE (Sandbox)
+   Blöcke für zusammengesetzte Schlüssel · editierbare Felder ·
+   Pfeile auf oberster Ebene · Ursprung = Block ODER Einzel-Attribut ·
+   Minimalschlüssel-Punkt direkt vor der Pfeilspitze (am Ziel)
+   ===================================================================== */
+const SVGNS='http://www.w3.org/2000/svg';
+const CV={nodes:[],edges:[],seq:0,tool:'move',pending:null,editing:false};
+const canvas=document.getElementById('canvas'), svg=document.getElementById('edges');
+
+function CVadd(type){
+  const id=++CV.seq;
+  const x=60+(CV.nodes.length%5)*120+Math.random()*16, y=40+Math.floor(CV.nodes.length/5)*100+Math.random()*16;
+  if(type==='block') CV.nodes.push({id,type:'block',x,y,title:'Schlüssel',children:[{id:++CV.seq,label:'Attr 1'},{id:++CV.seq,label:'Attr 2'}]});
+  else CV.nodes.push({id,type:'attr',x,y,label:'Attribut'});
+  CVrender();
+}
+function CVisArrow(){ return CV.tool==='arrow'||CV.tool==='arrowKey'||CV.tool==='arrowBi'; }
+function CVsetTool(t){
+  CV.tool=(CV.tool===t)?'move':t; CV.pending=null;
+  ['arrow','arrowKey','arrowBi','delete'].forEach(k=>{const b=document.getElementById('tool-'+k);if(b){b.classList.toggle('btn-pri',CV.tool===k);b.classList.toggle('btn-g',CV.tool!==k);}});
+  canvas.classList.toggle('arrowmode',CVisArrow());
+  document.getElementById('modeInd').textContent='Modus: '+(CV.tool==='arrow'?'Pfeil':CV.tool==='arrowKey'?'Minimalschlüssel-Pfeil':CV.tool==='arrowBi'?'Doppelpfeil':CV.tool==='delete'?'Löschen':'Bewegen');
+  CVrender();
+}
+function CVclear(){ CV.nodes=[];CV.edges=[];CV.pending=null;CVrender(); }
+function CVexample(){
+  CV.nodes=[];CV.edges=[];CV.seq=0;CV.pending=null;
+  const b=++CV.seq, pnr=++CV.seq, knr=++CV.seq;
+  CV.nodes.push({id:b,type:'block',x:250,y:70,title:'Schlüssel',children:[{id:pnr,label:'PNR'},{id:knr,label:'KNR'}]});
+  const mk=(x,y,l)=>{const id=++CV.seq;CV.nodes.push({id,type:'attr',x,y,label:l});return id;};
+  const name=mk(40,40,'Name'),adr=mk(40,140,'Adresse'),preis=mk(40,240,'Preis'),titel=mk(500,55,'Titel'),geb=mk(500,180,'Gebühr');
+  const E=(fc,t)=>CV.edges.push({id:++CV.seq,from:{node:b,child:fc},to:{node:t,child:null},key:true,bi:false});
+  E(pnr,name);E(pnr,adr);E(pnr,preis);E(knr,titel);E(knr,geb);
+  CVrender();
+}
+
+/* ---------- Rendering ---------- */
+function CVrender(){
+  canvas.querySelectorAll('.cnode,.cblock').forEach(n=>n.remove());
+  CV.nodes.forEach(n=>canvas.appendChild(n.type==='block'?CVbuildBlock(n):CVbuildAttr(n)));
+  if(CV.pending){const el=CVanchorEl(CV.pending);if(el)el.classList.add('src');}
+  requestAnimationFrame(CVdrawEdges);
+}
+function CVbuildAttr(n){
+  const el=document.createElement('div');el.className='cnode';el.dataset.node=n.id;el.style.left=n.x+'px';el.style.top=n.y+'px';
+  const sp=document.createElement('span');sp.textContent=n.label;el.appendChild(sp);
+  el.addEventListener('pointerdown',e=>CVdown(e,{node:n.id,child:null},n));
+  el.addEventListener('dblclick',e=>{e.preventDefault();e.stopPropagation();CVedit(sp,v=>{n.label=v;});});
+  return el;
+}
+function CVbuildBlock(n){
+  const el=document.createElement('div');el.className='cblock';el.dataset.node=n.id;el.style.left=n.x+'px';el.style.top=n.y+'px';
+  // Titel = ganzer Schlüssel als Ursprung; Doppelklick benennt um
+  const title=document.createElement('div');title.className='cblock-title';title.textContent=n.title;
+  title.addEventListener('pointerdown',e=>{e.stopPropagation();CVdown(e,{node:n.id,child:null},n);});
+  title.addEventListener('dblclick',e=>{e.preventDefault();e.stopPropagation();CVedit(title,v=>{n.title=v;});});
+  el.appendChild(title);
+  // Felder = einzelne Attribute; Doppelklick benennt um
+  n.children.forEach(ch=>{
+    const f=document.createElement('div');f.className='cfield';f.dataset.node=n.id;f.dataset.child=ch.id;
+    const sp=document.createElement('span');sp.textContent=ch.label;f.appendChild(sp);
+    f.addEventListener('pointerdown',e=>{e.stopPropagation();CVdown(e,{node:n.id,child:ch.id},n);});
+    f.addEventListener('dblclick',e=>{e.preventDefault();e.stopPropagation();CVedit(sp,v=>{ch.label=v;});});
+    el.appendChild(f);
+  });
+  const add=document.createElement('div');add.className='cblock-add';add.textContent='+ Feld';
+  add.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();});
+  add.addEventListener('click',e=>{e.stopPropagation();n.children.push({id:++CV.seq,label:'Attr'});CVrender();});
+  el.appendChild(add);
+  el.addEventListener('pointerdown',e=>CVdown(e,{node:n.id,child:null},n));
+  return el;
+}
+
+/* ---------- Namen bearbeiten (Doppelklick, contentEditable) ---------- */
+function CVedit(span,setVal){
+  CV.editing=true;
+  span.setAttribute('contenteditable','true');
+  span.focus();
+  const sel=window.getSelection(), rg=document.createRange();
+  rg.selectNodeContents(span); sel.removeAllRanges(); sel.addRange(rg);
+  const fin=()=>{
+    span.setAttribute('contenteditable','false');
+    setVal((span.textContent||'').trim()||'?');
+    CV.editing=false;
+    span.removeEventListener('blur',fin); span.removeEventListener('keydown',kd);
+    CVdrawEdges();
+  };
+  const kd=ev=>{ if(ev.key==='Enter'){ev.preventDefault();span.blur();} else if(ev.key==='Escape'){span.blur();} };
+  span.addEventListener('blur',fin);
+  span.addEventListener('keydown',kd);
+}
+
+/* ---------- Zeiger-Interaktion ---------- */
+function CVdown(e,anchor,node){
+  if(CV.editing || (e.target && e.target.isContentEditable)) return;   // Bearbeiten nicht stören
+  if(CV.tool==='delete'){
+    e.preventDefault(); e.stopPropagation();
+    if(anchor.child!=null){
+      node.children=node.children.filter(c=>c.id!==anchor.child);
+      CV.edges=CV.edges.filter(ed=>!((ed.from.node===node.id&&ed.from.child===anchor.child)||(ed.to.node===node.id&&ed.to.child===anchor.child)));
+    }else{
+      CV.nodes=CV.nodes.filter(x=>x.id!==node.id);
+      CV.edges=CV.edges.filter(ed=>ed.from.node!==node.id&&ed.to.node!==node.id);
+    }
+    CVrender(); return;
+  }
+  if(CVisArrow()){
+    e.preventDefault(); e.stopPropagation();
+    if(!CV.pending){ CV.pending={...anchor}; CVrender(); return; }
+    if(CV.pending.node===anchor.node && CV.pending.child===anchor.child){ CV.pending=null; CVrender(); return; }
+    CV.edges.push({id:++CV.seq, from:{...CV.pending}, to:{...anchor}, key:CV.tool==='arrowKey', bi:CV.tool==='arrowBi'});
+    CV.pending=null; CVrender(); return;
+  }
+  CVdrag(e,node);
+}
+function CVdrag(e,node){
+  e.preventDefault();
+  const el=CVnodeEl(node.id);
+  const r=canvas.getBoundingClientRect(), ox=e.clientX-r.left-node.x, oy=e.clientY-r.top-node.y;
+  const sx=e.clientX, sy=e.clientY; let moved=false;
+  const move=ev=>{
+    if(!moved && Math.hypot(ev.clientX-sx,ev.clientY-sy)<4) return;  // Schwelle: dblclick bleibt nutzbar
+    if(!moved){ moved=true; el.classList.add('dragging'); try{el.setPointerCapture(e.pointerId);}catch(_){} }
+    const rr=canvas.getBoundingClientRect();
+    node.x=Math.max(0,Math.min(rr.width-el.offsetWidth,  ev.clientX-rr.left-ox));
+    node.y=Math.max(0,Math.min(rr.height-el.offsetHeight, ev.clientY-rr.top-oy));
+    el.style.left=node.x+'px'; el.style.top=node.y+'px'; CVdrawEdges();
+  };
+  const up=()=>{ el.classList.remove('dragging'); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); try{el.releasePointerCapture(e.pointerId);}catch(_){} };
+  document.addEventListener('pointermove',move);
+  document.addEventListener('pointerup',up);
+}
+
+/* ---------- Geometrie & Kanten (Kanten liegen per z-index oben) ---------- */
+function CVnodeEl(id){ return canvas.querySelector('.cnode[data-node="'+id+'"]')||canvas.querySelector('.cblock[data-node="'+id+'"]'); }
+function CVanchorEl(a){
+  if(a.child!=null) return canvas.querySelector('[data-node="'+a.node+'"][data-child="'+a.child+'"]');
+  return CVnodeEl(a.node);
+}
+function CVrect(el){ const c=canvas.getBoundingClientRect(),r=el.getBoundingClientRect(); return {x:r.left-c.left+r.width/2,y:r.top-c.top+r.height/2,w:r.width,h:r.height}; }
+function CVborder(rect,tx,ty){ const dx=tx-rect.x,dy=ty-rect.y; if(!dx&&!dy)return{x:rect.x,y:rect.y}; const sx=dx?(rect.w/2)/Math.abs(dx):1e9,sy=dy?(rect.h/2)/Math.abs(dy):1e9,s=Math.min(sx,sy); return {x:rect.x+dx*s,y:rect.y+dy*s}; }
+function CVdrawEdges(){
+  [...svg.querySelectorAll('.edge')].forEach(p=>p.remove());
+  CV.edges.forEach(e=>{
+    const se=CVanchorEl(e.from), te=CVanchorEl(e.to); if(!se||!te) return;
+    const sr=CVrect(se), tr=CVrect(te);
+    const start=CVborder(sr,tr.x,tr.y), end=CVborder(tr,sr.x,sr.y);
+    const dx=end.x-start.x, dy=end.y-start.y, len=Math.hypot(dx,dy)||1, ux=dx/len, uy=dy/len;
+    const p=document.createElementNS(SVGNS,'path'); p.setAttribute('class','edge');
+    p.setAttribute('d','M'+start.x+' '+start.y+' L'+end.x+' '+end.y);
+    p.setAttribute('stroke','#3A3326'); p.setAttribute('stroke-width',e.key?'3.4':'2'); p.setAttribute('fill','none');
+    p.setAttribute('marker-end','url(#ah)');
+    if(e.bi) p.setAttribute('marker-start','url(#ah)');
+    p.style.pointerEvents=CV.tool==='delete'?'stroke':'none';
+    p.style.cursor=CV.tool==='delete'?'pointer':'default';
+    if(CV.tool==='delete') p.addEventListener('click',()=>{ CV.edges=CV.edges.filter(x=>x.id!==e.id); CVrender(); });
+    svg.appendChild(p);
+    // Minimalschlüssel-Punkt: NUR beim einfachen Schlüsselpfeil, nahe am Pfeilende, leicht über dem Schaft (Doppelpfeil: kein Punkt)
+    if(e.key && !e.bi){
+      let px=-uy, py=ux; if(py>0){px=-px;py=-py;}        // Senkrechte nach oben
+      const back=17, off=12, bx=end.x-ux*back, by=end.y-uy*back;
+      const dot=document.createElementNS(SVGNS,'circle'); dot.setAttribute('class','edge');
+      dot.setAttribute('cx', bx+px*off); dot.setAttribute('cy', by+py*off);
+      dot.setAttribute('r','6.5'); dot.setAttribute('fill','#3A3326'); svg.appendChild(dot);
+    }
+  });
+}
+function drawEdges(){ CVdrawEdges(); }            // Alias für den Tab-Wechsel-Code
+window.addEventListener('resize',()=>CVdrawEdges());
+
+/* =====================================================================
+   TABS
+   ===================================================================== */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.panel).classList.add('active');
+    if(t.dataset.panel==='sandbox') setTimeout(drawEdges,50);
+  };
+});
+
+/* =====================================================================
+   SELBSTTESTS DER ENGINE (nur Konsole)
+   ===================================================================== */
+(function selftest(){
+  try{
+    const A=['BuchungsNr','GastID','Gastname','GastPLZ','GastOrt','ZimmerNr','ZimmerTyp','PreisKategorie','Hotel','HotelTelefon'];
+    const F=[{lhs:['BuchungsNr'],rhs:['GastID','ZimmerNr']},{lhs:['GastID'],rhs:['Gastname','GastPLZ']},
+      {lhs:['GastPLZ'],rhs:['GastOrt']},{lhs:['ZimmerNr'],rhs:['ZimmerTyp','Hotel']},
+      {lhs:['ZimmerTyp'],rhs:['PreisKategorie']},{lhs:['Hotel'],rhs:['HotelTelefon']}];
+    const keys=candidateKeys(A,F);
+    console.assert(keys.length===1&&arrEq(keys[0],['BuchungsNr']),'Schlüssel sollte {BuchungsNr} sein',keys);
+    // Gesamttabelle: 2NF ok, 3NF verletzt
+    const prime=primeSet(A,keys);
+    console.assert(test2NF(A,F,keys,prime).length===0,'2NF sollte erfüllt sein (einfacher Schlüssel)');
+    console.assert(test3NF(A,F,keys,prime).length>0,'3NF sollte verletzt sein');
+    // korrekte Zerlegung verlustfrei + BCNF
+    const rels=[['BuchungsNr','GastID','ZimmerNr'],['GastID','Gastname','GastPLZ'],['GastPLZ','GastOrt'],
+      ['ZimmerNr','ZimmerTyp','Hotel'],['ZimmerTyp','PreisKategorie'],['Hotel','HotelTelefon']];
+    console.assert(losslessJoin(A,rels,F)===true,'Zerlegung sollte verlustfrei sein');
+    rels.forEach(R=>{ const k=candidateKeys(R,F); console.assert(testBCNF(R,F,k).length===0,'Teilrelation sollte BCNF sein: '+R.join(',')); });
+    // unvollständige (verlustbehaftete) Zerlegung erkennen
+    const bad=[['GastID','Gastname'],['GastPLZ','GastOrt']]; // verliert Verknüpfung
+    console.assert(losslessJoin(['GastID','Gastname','GastPLZ','GastOrt'],
+      [['GastID','Gastname'],['GastPLZ','GastOrt']],
+      [{lhs:['GastID'],rhs:['Gastname','GastPLZ']},{lhs:['GastPLZ'],rhs:['GastOrt']}])===false,
+      'fehlende Verknüpfung sollte verlustbehaftet sein');
+    console.log('%cEngine-Selbsttests bestanden ✓','color:#16A34A;font-weight:bold');
+  }catch(e){ console.error('Selbsttest-Fehler',e); }
+})();
+</script>
+<script>
+/* =====================================================================
+   NF-ERLERNEN — Lernmodul (eigener State, nutzt die globale Engine wieder)
+   ===================================================================== */
+
+/* ---------- Beispiel-Tabellen ---------- */
+const L_TABLES = {
+  kursliste:{ title:'Kursliste', nf1:true,
+    attrs:['PNR','Name','Adresse','KNR','Titel','Gebühr','Preis'],
+    fds:[{lhs:['PNR'],rhs:['Name','Adresse']},{lhs:['KNR'],rhs:['Titel','Gebühr']},{lhs:['PNR','KNR'],rhs:['Preis']}],
+    mvds:[],
+    cols:['PNR','Name','Adresse','KNR','Titel','Gebühr','Preis'],
+    rows:[['2100','Müller','Essen','23','DB','5.000,00','4.500,00'],['2100','Müller','Essen','17','C','3.000,00','2.700,00'],['2101','Müller','Essen','23','DB','5.000,00','4.500,00'],['2103','Hansen','Hamburg','24','Java','3.500,00','2.700,00'],['2103','Hansen','Hamburg','18','C++','3.500,00','2.700,00'],['2544','Schmidt','Frankfurt','24','Java','3.500,00','2.700,00'],['2544','Schmidt','Frankfurt','17','C','3.000,00','2.700,00'],['2378','Krüger','München','17','C','3.000,00','3.000,00']],
+    note:'In 1NF. Schlüsselkandidat {PNR, KNR}. Name/Adresse hängen nur von PNR, Titel/Gebühr nur von KNR ab — klassisches 2NF-Problem (partielle Abhängigkeiten).' },
+
+  lieferung:{ title:'Lieferung', nf1:true,
+    attrs:['LNR','Status','Ort','Pos','Menge'],
+    fds:[{lhs:['LNR'],rhs:['Status','Ort']},{lhs:['LNR','Pos'],rhs:['Menge']}],
+    mvds:[],
+    cols:['LNR','Status','Ort','Pos','Menge'],
+    rows:[['L1','Versand','München','1','300'],['L1','Versand','München','2','200'],['L1','Versand','München','3','400'],['L2','Planung','Hamburg','1','300'],['L2','Planung','Hamburg','2','400'],['L3','Planung','Hamburg','2','200'],['L4','Versand','Frankfurt','2','200'],['L4','Versand','Frankfurt','4','300']],
+    note:'In 1NF. Schlüsselkandidat {LNR, Pos}. Status/Ort hängen nur von LNR ab → partielle Abhängigkeit (2NF-Problem).' },
+
+  personfamilie:{ title:'PersonFamilie', nf1:false,
+    attrs:['PNR','Name','Mitglied','Rolle'],
+    fds:[{lhs:['PNR'],rhs:['Name']},{lhs:['PNR','Mitglied'],rhs:['Rolle']}],
+    mvds:[],
+    cols:['PNR','Name','Familie'],
+    rows:[['2100','Müller','Heinz: Ehemann, Ulla: Ehefrau, Dirk: Sohn'],['2101','Müller','Bernd: Ehemann, Gisela: Ehefrau'],['2103','Hansen','Thomas: Ehemann, Christian: Ehemann'],['2544','Schmidt','Susanne: Mutter, Anna: Tochter'],['2378','Krüger','Markus: Ehemann, Manuela: Ehefrau, David: Sohn, Emma: Tochter']],
+    note:'⚠ NICHT in 1NF! Die Spalte „Familie" enthält je Zelle mehrere Werte (Wiederholungsgruppe).',
+    atomicNote:'<b>1. Schritt (1NF):</b> „Familie" atomar machen — je Familienmitglied eine eigene Zeile mit den Attributen <b>Mitglied</b> und <b>Rolle</b>. Unten arbeitest du mit dieser atomaren Form weiter: <b>PNR, Name, Mitglied, Rolle</b> (Schlüssel {PNR, Mitglied}).' },
+
+  lehrangebot:{ title:'Lehrangebot', nf1:true,
+    attrs:['Kurs','Dozent','Lehrbuch'],
+    fds:[],
+    mvds:[{lhs:['Kurs'],rhs:['Dozent']},{lhs:['Kurs'],rhs:['Lehrbuch']}],
+    cols:['Kurs','Dozent','Lehrbuch'],
+    rows:[['DBS','Müller','Kemper'],['DBS','Müller','Date'],['DBS','Schmidt','Kemper'],['DBS','Schmidt','Date'],['BS','Weber','Tanenbaum']],
+    note:'In 1NF, sogar in BCNF (nur Schlüssel). Aber: Dozenten und Lehrbücher eines Kurses sind <i>unabhängig</i> → mehrwertige Abhängigkeiten Kurs ↠ Dozent und Kurs ↠ Lehrbuch. Das verletzt die 4NF.' },
+
+  hotel:{ title:'Hotel-Buchung', nf1:true,
+    attrs:['BuchungsNr','GastID','Gastname','GastPLZ','GastOrt','ZimmerNr','ZimmerTyp','PreisKategorie','Hotel','HotelTelefon'],
+    fds:[{lhs:['BuchungsNr'],rhs:['GastID','ZimmerNr']},{lhs:['GastID'],rhs:['Gastname','GastPLZ']},{lhs:['GastPLZ'],rhs:['GastOrt']},{lhs:['ZimmerNr'],rhs:['ZimmerTyp','Hotel']},{lhs:['ZimmerTyp'],rhs:['PreisKategorie']},{lhs:['Hotel'],rhs:['HotelTelefon']}],
+    mvds:[],
+    cols:['BuchungsNr','GastID','Gastname','GastPLZ','GastOrt','ZimmerNr','ZimmerTyp','PreisKat.','Hotel','HotelTel.'],
+    rows:[['B1','G1','Müller','86150','Augsburg','Z1','Suite','Premium','Adler','0821-1'],['B2','G1','Müller','86150','Augsburg','Z2','Standard','Basic','Adler','0821-1'],['B3','G2','Hansen','20095','Hamburg','Z1','Suite','Premium','Adler','0821-1']],
+    note:'In 1NF. Einziger Schlüsselkandidat {BuchungsNr}. Lange transitive Kette (GastID→GastPLZ→GastOrt, ZimmerNr→ZimmerTyp→PreisKategorie, …) → ideal, um 2NF/3NF/BCNF bis zur 5NF zu üben.' },
+};
+
+/* ---------- Zerlegungs-Algorithmen (nutzen globale closure/candidateKeys/…) ---------- */
+function LcanonicalCover(fds){
+  let W=[]; fds.forEach(f=>f.rhs.forEach(a=>W.push({lhs:[...f.lhs],rhs:[a]})));
+  for(const fd of W){ for(const b of [...fd.lhs]){ if(fd.lhs.length<=1) break; const red=fd.lhs.filter(x=>x!==b); if(closure(red,W).has(fd.rhs[0])) fd.lhs=red; } }
+  for(let i=W.length-1;i>=0;i--){ const wo=W.filter((_,k)=>k!==i); if(closure(W[i].lhs,wo).has(W[i].rhs[0])) W.splice(i,1); }
+  const g={}; W.forEach(f=>{const k=[...f.lhs].sort().join(',');(g[k]=g[k]||{lhs:f.lhs,rhs:[]}).rhs.push(f.rhs[0]);});
+  return Object.values(g);
+}
+function LdropSubsets(rels){ return rels.filter((r,i)=>!rels.some((o,j)=>i!==j&&subsetArr(r.attrs,o.attrs)&&(r.attrs.length<o.attrs.length||(r.attrs.length===o.attrs.length&&j<i)))); }
+function LattachKeys(rels,fds){ rels.forEach(r=>r.key=candidateKeys(r.attrs,fds)[0]); return rels; }
+function Lsg(a){return [...a].sort().join(',');}
+function L2NF(R,fds){
+  // iterativ: solange eine Relation eine partielle Abhängigkeit (auf IRGENDEINEN Schlüssel) hat, auslagern
+  let rels=[{attrs:[...R]}]; let changed=true,guard=0;
+  while(changed&&guard++<300){ changed=false;
+    for(let i=0;i<rels.length;i++){ const A=rels[i].attrs;
+      const keys=candidateKeys(A,fds), prime=primeSet(A,keys);
+      const v=test2NF(A,fds,keys,prime)[0];
+      if(v){ const X=v.lhs, cl=closure(X,fds);
+        const r1=A.filter(a=>cl.has(a));
+        const r2=[...new Set([...X,...A.filter(a=>!cl.has(a))])];
+        rels.splice(i,1,{attrs:r1},{attrs:r2}); changed=true; break; }
+    }
+  }
+  const seen=new Set(); rels=rels.filter(r=>{const k=Lsg(r.attrs);if(seen.has(k))return false;seen.add(k);return true;});
+  return LattachKeys(LdropSubsets(rels),fds);
+}
+function L3NF(R,fds){
+  const cover=LcanonicalCover(fds);
+  let rels=cover.map(f=>({attrs:[...new Set([...f.lhs,...f.rhs])],key:f.lhs}));
+  const keys=candidateKeys(R,fds);
+  if(!rels.some(r=>keys.some(k=>subsetArr(k,r.attrs)))) rels.push({attrs:[...keys[0]],key:keys[0]});
+  return LattachKeys(LdropSubsets(rels),fds);
+}
+function LBCNF(R,fds){
+  // sauberer Start = 3NF-Synthese (entspricht der Lehrbuchlösung, wo 3NF=BCNF), dann nur verbleibende BCNF-Verletzungen zerlegen
+  let rels=L3NF(R,fds).map(r=>({attrs:[...r.attrs]}));
+  let changed=true,guard=0;
+  while(changed&&guard++<300){ changed=false;
+    for(let i=0;i<rels.length;i++){ const A=rels[i].attrs; let viol=null;
+      for(const X of properNonEmptySubsets(A)){ if(isSuperkey(X,A,fds)) continue; const cl=closure(X,fds); if(A.some(a=>cl.has(a)&&!X.includes(a))){ viol=X; break; } }
+      if(viol){ const cl=closure(viol,fds); const r1=A.filter(a=>cl.has(a)); const r2=[...new Set([...viol,...A.filter(a=>!cl.has(a))])]; rels.splice(i,1,{attrs:r1},{attrs:r2}); changed=true; break; }
+    }
+  }
+  const seen=new Set(); rels=rels.filter(r=>{const k=Lsg(r.attrs);if(seen.has(k))return false;seen.add(k);return true;});
+  return LattachKeys(LdropSubsets(rels),fds);
+}
+function Ltest4NF(R,fds,mvds,keys){
+  const v=[];
+  for(const m of (mvds||[])){
+    if(!m.lhs.every(a=>R.includes(a))) continue;
+    const Y=m.rhs.filter(a=>R.includes(a)&&!m.lhs.includes(a));
+    if(!Y.length) continue; if(R.every(a=>m.lhs.includes(a)||Y.includes(a))) continue;
+    if(isSuperkey(m.lhs,R,fds)) continue;
+    v.push({lhs:m.lhs,rhs:Y});
+  }
+  return v;
+}
+function L4NF(R,fds,mvds){
+  let rels=LBCNF(R,fds); let changed=true,guard=0;
+  while(changed&&guard++<100){ changed=false;
+    for(let i=0;i<rels.length;i++){ const A=rels[i].attrs;
+      const localM=(mvds||[]).filter(m=>m.lhs.every(a=>A.includes(a))&&m.rhs.some(a=>A.includes(a)));
+      const viol=Ltest4NF(A,fds,localM,candidateKeys(A,fds))[0];
+      if(viol){ const X=viol.lhs, Y=viol.rhs.filter(a=>A.includes(a)); const r1=[...new Set([...X,...Y])]; const r2=[...new Set([...X,...A.filter(a=>!Y.includes(a))])]; rels.splice(i,1,{attrs:r1},{attrs:r2}); changed=true; break; }
+    }
+  }
+  const seen=new Set(); rels=rels.filter(r=>{const k=Lsg(r.attrs);if(seen.has(k))return false;seen.add(k);return true;});
+  return LattachKeys(LdropSubsets(rels),fds);
+}
+/* Verlustfreiheit inkl. MVD-Split (für 4NF-Beispiele ohne FDs) */
+function LlosslessMVD(R,rels,fds,mvds){
+  if(losslessJoin(R,rels,fds)) return true;
+  if(rels.length===2 && (mvds||[]).length){
+    const X=rels[0].filter(a=>rels[1].includes(a));
+    const r1=rels[0].filter(a=>!X.includes(a)), r2=rels[1].filter(a=>!X.includes(a));
+    return mvds.some(m=>subsetArr(m.lhs,X)&&(arrEq(m.rhs.filter(a=>R.includes(a)),r1)||arrEq(m.rhs.filter(a=>R.includes(a)),r2)));
+  }
+  return false;
+}
+
+/* ---------- State ---------- */
+const LS={tbl:null,target:'3NF',relations:[],determinants:[],sel:null,relSeq:0,detSeq:0};
+const L_NF=['1NF','2NF','3NF','BCNF','4NF','5NF'];
+const L_COL={'1NF':'var(--blue)','2NF':'var(--teal)','3NF':'var(--violet)','BCNF':'var(--amber)','4NF':'var(--rose)','5NF':'var(--green)'};
+
+/* ---------- Tabellen-Auswahl ---------- */
+function LselectTable(key){
+  if(!key){ LS.tbl=null; document.getElementById('L-tableInfo').innerHTML=''; document.getElementById('L-targetCard').style.display='none'; document.getElementById('L-workCard').style.display='none'; return; }
+  LS.tbl=L_TABLES[key]; LS.relations=[]; LS.determinants=[]; LS.sel=null; LS.target='3NF';
+  document.getElementById('L-targetCard').style.display='block';
+  document.getElementById('L-workCard').style.display='block';
+  document.getElementById('L-solution').innerHTML='';
+  document.getElementById('L-checkResult').innerHTML='';
+  LrenderTableInfo(); LrenderNFBtns(); LrenderPool(); LrenderRelations(); LrenderDets();
+}
+function LrenderTableInfo(){
+  const t=LS.tbl, box=document.getElementById('L-tableInfo');
+  let h='<div class="L-prev"><table class="L-tbl"><tr>'+t.cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
+  t.rows.forEach(r=>{ h+='<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>'; });
+  h+='</table></div>';
+  h+='<div style="margin:10px 0">'+(t.nf1?'<span class="L-badge ok">in 1NF</span>':'<span class="L-badge no">⚠ nicht in 1NF</span>')+'</div>';
+  h+='<p class="hint" style="font-size:13.5px">'+t.note+'</p>';
+  if(!t.nf1 && t.atomicNote) h+='<div class="L-banner">'+t.atomicNote+'</div>';
+  const keys=candidateKeys(t.attrs,t.fds);
+  h+='<div class="infoline" style="margin-top:10px"><b>Schlüsselkandidat(en):</b> '+keys.map(k=>'{'+k.join(', ')+'}').join('  ·  ')+'  — Primattribute: '+[...primeSet(t.attrs,keys)].join(', ')+'</div>';
+  box.innerHTML=h;
+}
+function LrenderNFBtns(){
+  const box=document.getElementById('L-nfbtns'); box.innerHTML='';
+  L_NF.forEach(nf=>{ const b=document.createElement('button'); b.className='L-nfbtn'+(LS.target===nf?' on':''); b.textContent=nf;
+    if(LS.target===nf){ b.style.background=L_COL[nf]; b.style.borderColor=L_COL[nf]; }
+    b.onclick=()=>{ LS.target=nf; LrenderNFBtns(); document.getElementById('L-solution').innerHTML=''; }; box.appendChild(b); });
+}
+
+/* ---------- Musterlösung ---------- */
+function LsolRels(){
+  const t=LS.tbl, nf=LS.target;
+  if(nf==='1NF'){
+    const intro = t.nf1 ? 'Die Tabelle ist bereits in 1NF (atomare Werte). Eine Relation mit Schlüssel:' : 'Die Originaltabelle ist <b>nicht</b> in 1NF. Lösung: nicht-atomare Spalte aufteilen (je Wert eine Zeile). Daraus entsteht diese atomare Relation:';
+    return {intro, rels:[{attrs:[...t.attrs],key:candidateKeys(t.attrs,t.fds)[0]}]};
+  }
+  if(nf==='2NF') return {intro:'2NF — partielle Abhängigkeiten in eigene Relationen ausgelagert:', rels:L2NF(t.attrs,t.fds)};
+  if(nf==='3NF') return {intro:'3NF — Synthese-Algorithmus über die kanonische Überdeckung:', rels:L3NF(t.attrs,t.fds)};
+  if(nf==='BCNF') return {intro:'BCNF — Dekompositions-Algorithmus (jede Determinante wird Schlüssel):', rels:LBCNF(t.attrs,t.fds)};
+  const has=(t.mvds&&t.mvds.length);
+  const intro=(nf==='5NF'?'5NF':'4NF')+' — '+(has?'mehrwertige Abhängigkeiten aufgelöst (R1 = X∪Y, R2 = X∪Rest):':'nach BCNF entstehen nur binäre/einfache Relationen — damit automatisch in 4NF und 5NF:');
+  return {intro, rels:L4NF(t.attrs,t.fds,t.mvds||[])};
+}
+function LshowSolution(){
+  const t=LS.tbl; if(!t)return;
+  const {intro,rels}=LsolRels();
+  let h='<div class="L-sol"><h4>Musterlösung für '+LS.target+'</h4><p class="intro">'+intro+'</p><div class="relgrid">';
+  rels.forEach((r,i)=>{ const nm=LnameFor(r.attrs,r.key,i);
+    h+='<div class="relcard ro"><div class="rh"><span class="rn">'+esc(nm)+'</span></div><div class="chips">'+r.attrs.map(a=>'<span class="chip'+((r.key||[]).includes(a)?' pk':'')+'">'+esc(a)+((r.key||[]).includes(a)?' 🔑':'')+'</span>').join('')+'</div></div>'; });
+  h+='</div><div class="row" style="margin-top:14px"><button class="btn btn-g btn-sm" onclick="LapplySolution()">In meinen Editor übernehmen</button></div></div>';
+  document.getElementById('L-solution').innerHTML=h;
+  LS._sol=rels;
+}
+function LhideSolution(){ document.getElementById('L-solution').innerHTML=''; }
+function LapplySolution(){
+  if(!LS._sol)return;
+  LS.relations=LS._sol.map((r,i)=>({id:++LS.relSeq,name:LnameFor(r.attrs,r.key,i),attrs:r.attrs.map(a=>({name:a,key:(r.key||[]).includes(a)}))}));
+  LS.sel=null; LrenderRelations(); document.getElementById('L-workCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function LnameFor(attrs,key,i){
+  const map={GastID:'GAST',GastPLZ:'ORT',ZimmerNr:'ZIMMER',ZimmerTyp:'ZIMMERTYP',Hotel:'HOTEL',BuchungsNr:'BUCHUNG',PNR:'PERSON',KNR:'KURS',LNR:'LIEFERUNG',Kurs:'KURS'};
+  if(key&&key.length===1&&map[key[0]]) return map[key[0]];
+  return 'R'+(i+1);
+}
+
+/* ---------- Pool / Relationen ---------- */
+function LrenderPool(){
+  const box=document.getElementById('L-pool'); box.innerHTML='';
+  LS.tbl.attrs.forEach(a=>{ const c=document.createElement('span'); c.className='chip'; c.textContent=a; c.onclick=()=>LaddAttrToSel(a); box.appendChild(c); });
+}
+function LaddAttrToSel(name){
+  if(!LS.sel){ if(LS.relations.length){ LS.sel={k:'rel',id:LS.relations[LS.relations.length-1].id}; } else { LaddRelation(); } }
+  if(!LS.sel) return;
+  if(LS.sel.k==='rel'){ const r=LS.relations.find(x=>x.id===LS.sel.id); if(r&&!r.attrs.some(a=>a.name===name)) r.attrs.push({name,key:false}); LrenderRelations(); }
+  else { const d=LS.determinants.find(x=>x.id===LS.sel.id); if(d&&!d.attrs.includes(name)) d.attrs.push(name); LrenderDets(); }
+}
+function LaddRelation(){ const id=++LS.relSeq; LS.relations.push({id,name:'Relation '+(LS.relations.length+1),attrs:[]}); LS.sel={k:'rel',id}; LrenderRelations(); LrenderDets(); }
+function LclearRels(){ LS.relations=[]; if(LS.sel&&LS.sel.k==='rel')LS.sel=null; document.getElementById('L-checkResult').innerHTML=''; LrenderRelations(); }
+function LselRel(id){ LS.sel={k:'rel',id}; LrenderRelations(); LrenderDets(); }
+function LrenderRelations(){
+  const box=document.getElementById('L-relGrid'); box.innerHTML='';
+  LS.relations.forEach(r=>{
+    const card=document.createElement('div'); card.className='relcard'+(LS.sel&&LS.sel.k==='rel'&&LS.sel.id===r.id?' sel':'');
+    card.onclick=(e)=>{ if(e.target.tagName!=='INPUT'&&!e.target.classList.contains('x')&&!e.target.classList.contains('rdel')) LselRel(r.id); };
+    const head=document.createElement('div'); head.className='rh';
+    const inp=document.createElement('input'); inp.value=r.name; inp.onchange=()=>{r.name=inp.value;};
+    const del=document.createElement('span'); del.className='rdel'; del.textContent='×'; del.onclick=()=>{ LS.relations=LS.relations.filter(x=>x.id!==r.id); if(LS.sel&&LS.sel.id===r.id)LS.sel=null; LrenderRelations(); };
+    head.appendChild(inp); head.appendChild(del); card.appendChild(head);
+    if(!r.attrs.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='leer — Attribut oben anklicken'; card.appendChild(e); }
+    else{ const ch=document.createElement('div'); ch.className='chips';
+      r.attrs.forEach(a=>{ const el=document.createElement('span'); el.className='chip'+(a.key?' pk':'');
+        el.innerHTML='<span>'+esc(a.name)+(a.key?' 🔑':'')+'</span><span class="x">×</span>';
+        el.querySelector('span').onclick=(ev)=>{ev.stopPropagation();a.key=!a.key;LrenderRelations();};
+        el.querySelector('.x').onclick=(ev)=>{ev.stopPropagation();r.attrs=r.attrs.filter(x=>x.name!==a.name);LrenderRelations();}; ch.appendChild(el); });
+      card.appendChild(ch); }
+    box.appendChild(card);
+  });
+}
+
+/* ---------- Determinanten-Arbeitsfeld ---------- */
+function LaddDet(){ const id=++LS.detSeq; LS.determinants.push({id,attrs:[]}); LS.sel={k:'det',id}; LrenderDets(); LrenderRelations(); }
+function LselDet(id){ LS.sel={k:'det',id}; LrenderDets(); LrenderRelations(); }
+function LdetVerdict(attrs){
+  if(!attrs.length) return {cls:'',txt:'— Attribute anklicken'};
+  const R=LS.tbl.attrs, fds=LS.tbl.fds;
+  if(!isSuperkey(attrs,R,fds)) return {cls:'nein',txt:'nein — kein Superschlüssel (X⁺ ≠ R)'};
+  const minimal=attrs.every(a=>!isSuperkey(attrs.filter(x=>x!==a),R,fds));
+  if(!minimal) return {cls:'nein',txt:'nein — Superschlüssel, aber nicht minimal'};
+  return {cls:'ja',txt:'ja — Schlüsselkandidat ✓'};
+}
+function LrenderDets(){
+  const box=document.getElementById('L-detGrid'); box.innerHTML='';
+  if(!LS.determinants.length){ box.innerHTML='<p class="hint" style="font-style:italic">Noch keine Determinante. „+ Determinante" anlegen, auswählen und Attribute anklicken.</p>'; return; }
+  // Kopfzeile wie im Screenshot
+  const head=document.createElement('div'); head.style.cssText='display:flex;gap:10px;font-family:var(--fdisp);font-weight:700;font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;padding:0 4px 4px';
+  head.innerHTML='<div style="flex:1">Determinante</div><div style="flex:1">Schlüsselkandidat?</div>';
+  box.appendChild(head);
+  LS.determinants.forEach((d,i)=>{
+    const v=LdetVerdict(d.attrs);
+    const row=document.createElement('div'); row.className='L-detrow'+(LS.sel&&LS.sel.k==='det'&&LS.sel.id===d.id?' sel':'');
+    row.onclick=(e)=>{ if(!e.target.classList.contains('x')&&!e.target.classList.contains('L-detdel')) LselDet(d.id); };
+    const hd=document.createElement('div'); hd.className='L-dethead';
+    hd.innerHTML='<span class="L-detlabel">Determinante '+(i+1)+'</span><span class="L-detdel">×</span>';
+    hd.querySelector('.L-detdel').onclick=()=>{ LS.determinants=LS.determinants.filter(x=>x.id!==d.id); if(LS.sel&&LS.sel.id===d.id)LS.sel=null; LrenderDets(); };
+    row.appendChild(hd);
+    if(!d.attrs.length){ const e=document.createElement('div'); e.className='L-detempty'; e.textContent='leer — Attribut oben anklicken'; row.appendChild(e); }
+    else { const ch=document.createElement('div'); ch.className='chips';
+      d.attrs.forEach(a=>{ const el=document.createElement('span'); el.className='chip sel'; el.innerHTML='<span>'+esc(a)+'</span><span class="x">×</span>';
+        el.querySelector('.x').onclick=(ev)=>{ev.stopPropagation();d.attrs=d.attrs.filter(x=>x!==a);LrenderDets();}; ch.appendChild(el); });
+      row.appendChild(ch); }
+    const verd=document.createElement('div'); verd.className='L-verdict '+v.cls; verd.textContent=v.txt; row.appendChild(verd);
+    box.appendChild(row);
+  });
+}
+
+/* ---------- Prüfen ---------- */
+function Lviol(rule,v){
+  const A=Array.isArray(v.rhs)?v.rhs.join(', '):v.rhs, X=v.lhs.length===1?v.lhs[0]:'('+v.lhs.join(', ')+')';
+  if(rule==='2NF') return Lcard('Das Nicht-Primattribut <b>'+esc(A)+'</b> hängt nur von <b>'+esc(X)+'</b> ab — einem Teil des Schlüssels (partielle Abhängigkeit).','Lagere <b>'+esc(X)+'</b> und <b>'+esc(A)+'</b> in eine eigene Relation aus; <b>'+esc(X)+'</b> wird dort Schlüssel.');
+  if(rule==='3NF') return Lcard('<b>'+esc(A)+'</b> hängt über <b>'+esc(X)+'</b> ab, aber <b>'+esc(X)+'</b> ist kein Schlüssel → transitive Abhängigkeit.','Neue Relation mit <b>'+esc(X)+'</b> und <b>'+esc(A)+'</b>, <b>'+esc(X)+'</b> als Schlüssel.');
+  if(rule==='BCNF') return Lcard('Die Determinante <b>'+esc(X)+'</b> bestimmt <b>'+esc(A)+'</b>, ist aber kein Schlüsselkandidat dieser Relation.','Zerlege so, dass <b>'+esc(X)+'</b> in einer eigenen Relation alleiniger Schlüssel ist.');
+  return Lcard('Mehrwertige Abhängigkeit <b>'+esc(X)+' ↠ '+esc(A)+'</b>, aber <b>'+esc(X)+'</b> ist kein Schlüssel (Fagin).','Zerlege in R1(<b>'+esc(X)+', '+esc(A)+'</b>) und R2(<b>'+esc(X)+'</b>, Rest).');
+}
+function Lcard(err,fix){ return '<div class="L-viol"><div class="err"><span class="fl">Verletzte Regel</span>'+err+'</div><div class="fix"><span class="fl">💡 Lösung</span>'+fix+'</div></div>'; }
+function Lcheck(){
+  const t=LS.tbl, box=document.getElementById('L-checkResult'); if(!t)return;
+  if(!LS.relations.length){ box.innerHTML='<div class="infoline">Lege links mindestens eine Relation an und verteile die Attribute.</div>'; return; }
+  const R=t.attrs, fds=t.fds, mvds=t.mvds||[], nf=LS.target;
+  const rels=LS.relations.map(r=>r.attrs.map(a=>a.name));
+  const missing=R.filter(a=>!rels.some(rr=>rr.includes(a)));
+  const lossless=(nf==='1NF')?true:LlosslessMVD(R,rels,fds,mvds);
+  let allOk=!missing.length&&lossless, html='';
+  LS.relations.forEach(r=>{
+    const A=r.attrs.map(a=>a.name); if(!A.length) return;
+    const keys=candidateKeys(A,fds), prime=primeSet(A,keys); let viols=[];
+    if(nf==='2NF') viols=test2NF(A,fds,keys,prime).map(v=>({v,rule:'2NF'}));
+    else if(nf==='3NF'){ const v2=test2NF(A,fds,keys,prime); viols=v2.length?v2.map(v=>({v,rule:'2NF'})):test3NF(A,fds,keys,prime).map(v=>({v,rule:'3NF'})); }
+    else if(nf==='BCNF') viols=testBCNF(A,fds,keys).map(v=>({v,rule:'BCNF'}));
+    else if(nf==='4NF'||nf==='5NF'){ const vb=testBCNF(A,fds,keys); viols=vb.length?vb.map(v=>({v,rule:'BCNF'})):Ltest4NF(A,fds,mvds,keys).map(v=>({v,rule:'4NF'})); }
+    const okR=viols.length===0; if(!okR)allOk=false;
+    const col=okR?'var(--green)':'var(--red)';
+    html+='<div class="relreport" style="--c:'+col+';border-left:4px solid '+col+';background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin:10px 0"><div style="font-family:var(--fdisp);font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+(okR?'✓':'✗')+' '+esc(r.name)+' <span class="L-badge '+(okR?'ok':'no')+'">'+(okR?'in '+nf:nf+' verletzt')+'</span></div><div style="font-family:var(--fmono);font-size:12px;color:var(--ink-faint);margin:6px 0">Schlüssel: '+keys.map(k=>'{'+k.join(', ')+'}').join(' · ')+'</div>';
+    viols.forEach(x=>{ html+=Lviol(x.rule,x.v); });
+    html+='</div>';
+  });
+  const valid=allOk&&!missing.length&&lossless;
+  let top = valid
+    ? '<div class="verdict ok"><div class="icon">✓</div><div class="body"><div class="title">Deine Zerlegung erfüllt die '+nf+'.</div><div class="desc">Alle Relationen bestehen den Test'+(nf!=='1NF'?' und die Zerlegung ist verlustfrei.':'.')+'</div></div></div>'
+    : '<div class="verdict bad"><div class="icon">✗</div><div class="body"><div class="title">Noch nicht in '+nf+'.</div><div class="desc">'+[missing.length?missing.length+' Attribut(e) fehlen':'',(!allOk&&!missing.length)?'eine Relation verletzt die Regeln':'',(nf!=='1NF'&&!lossless)?'die Zerlegung ist verlustbehaftet':''].filter(Boolean).join(' · ')+'</div></div></div>';
+  if(missing.length) top+='<div class="L-viol"><div class="err"><span class="fl">Verletzte Regel</span>Diese Attribute fehlen in jeder Relation: <b>'+missing.join(', ')+'</b></div><div class="fix"><span class="fl">💡 Lösung</span>Jedes Attribut muss in mindestens einer Relation vorkommen.</div></div>';
+  if(nf!=='1NF'&&!lossless) top+='<div class="L-viol"><div class="err"><span class="fl">Verletzte Regel</span>Die Zerlegung ist <b>verlustbehaftet</b> — beim Join entstehen Scheintupel.</div><div class="fix"><span class="fl">💡 Lösung</span>Die gemeinsamen Attribute zweier Relationen müssen in einer davon Schlüssel sein (verbindendes Attribut nicht vergessen).</div></div>';
+  box.innerHTML=top+html;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+</script>
+<script>
+/* =====================================================================
+   DIAGRAMM-FLÄCHE · Upload-gesteuerte Zerlegung (State DGS)
+   Nutzt global: csvToRows, holdsInData, esc, candidateKeys, primeSet,
+   test2NF/3NF/BCNF, L2NF/L3NF/LBCNF/L4NF, Ltest4NF, LlosslessMVD, Lviol
+   ===================================================================== */
+const DGS={attrs:[],rows:[],fds:[],target:'2NF',relations:[],sel:null,relSeq:0,_nl:[]};
+const DG_NF=['1NF','2NF','3NF','BCNF','4NF','5NF'];
+const DG_COL={'1NF':'var(--blue)','2NF':'var(--teal)','3NF':'var(--violet)','BCNF':'var(--amber)','4NF':'var(--rose)','5NF':'var(--green)'};
+
+/* ---------- Upload ---------- */
+function DGhandleFile(file){
+  if(!file) return;
+  document.getElementById('dgErr').textContent='';
+  document.getElementById('dgFileName').textContent=file.name;
+  const name=file.name.toLowerCase(), reader=new FileReader();
+  if(name.endsWith('.csv')){ reader.onload=e=>DGparse(csvToRows(e.target.result)); reader.readAsText(file); }
+  else {
+    if(typeof XLSX==='undefined'){ document.getElementById('dgErr').textContent='Excel-Bibliothek nicht geladen — bitte als CSV speichern und erneut hochladen.'; return; }
+    reader.onload=e=>{ try{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const ws=wb.Sheets[wb.SheetNames[0]]; DGparse(XLSX.utils.sheet_to_json(ws,{header:1,blankrows:false})); }catch(err){ document.getElementById('dgErr').textContent='Datei konnte nicht gelesen werden: '+err.message; } };
+    reader.readAsArrayBuffer(file);
+  }
+}
+function DGparse(rows){
+  if(!rows||!rows.length){ document.getElementById('dgErr').textContent='Keine Daten gefunden.'; return; }
+  const header=rows[0].map(h=>String(h).trim()).filter(Boolean);
+  DGS.attrs=[...new Set(header)];
+  DGS.rows=rows.slice(1).map(r=>{ const o={}; header.forEach((h,i)=>o[h]=r[i]!==undefined?String(r[i]):''); return o; }).filter(o=>Object.values(o).some(v=>v!==''));
+  DGS.relations=[]; DGS.sel=null; DGS.target='2NF'; DGS._nl=[];
+  DGinferFDs();
+  DGrenderPreview(header); DGrenderAttrList(); DGrenderFds(); DGrenderNfbtns(); DGrenderPool(); DGrenderRelations();
+  document.getElementById('dgSolution').innerHTML=''; document.getElementById('dgCheckResult').innerHTML='';
+}
+/* ---------- Attribute manuell anlegen (ohne Upload) ---------- */
+function DGloadHotel(){
+  DGS.attrs=['BuchungsNr','GastID','Gastname','GastPLZ','GastOrt','ZimmerNr','ZimmerTyp','PreisKategorie','Hotel','HotelTelefon'];
+  DGS.fds=[
+    {lhs:['BuchungsNr'],rhs:['GastID','ZimmerNr']},
+    {lhs:['GastID'],rhs:['Gastname','GastPLZ']},
+    {lhs:['GastPLZ'],rhs:['GastOrt']},
+    {lhs:['ZimmerNr'],rhs:['ZimmerTyp','Hotel']},
+    {lhs:['ZimmerTyp'],rhs:['PreisKategorie']},
+    {lhs:['Hotel'],rhs:['HotelTelefon']}
+  ];
+  DGS.rows=[]; DGS.relations=[]; DGS.sel=null; DGS._nl=[]; DGS.target='3NF';
+  const fn=document.getElementById('dgFileName'); if(fn) fn.textContent='';
+  const er=document.getElementById('dgErr'); if(er) er.textContent='';
+  const pv=document.getElementById('dgPreview'); if(pv) pv.innerHTML='';
+  DGafterAttrsChange();
+}
+
+function DGaddManualAttrs(){
+  const inp=document.getElementById('dgAttrIn'); const raw=(inp&&inp.value)||'';
+  const parts=raw.split(/[,;\n\t ]+/).map(x=>x.trim()).filter(Boolean);
+  if(!parts.length) return;
+  parts.forEach(p=>{ if(!DGS.attrs.includes(p)) DGS.attrs.push(p); });
+  if(inp) inp.value='';
+  DGafterAttrsChange();
+}
+function DGremoveAttr(name){
+  DGS.attrs=DGS.attrs.filter(a=>a!==name);
+  DGS.fds=DGS.fds.map(f=>({lhs:f.lhs.filter(a=>a!==name),rhs:f.rhs.filter(a=>a!==name)})).filter(f=>f.lhs.length&&f.rhs.length);
+  DGS.relations.forEach(r=>r.attrs=r.attrs.filter(a=>a.name!==name));
+  DGS._nl=DGS._nl.filter(a=>a!==name);
+  DGafterAttrsChange();
+}
+function DGafterAttrsChange(){
+  DGrenderAttrList(); DGrenderFds(); DGrenderNfbtns(); DGrenderPool(); DGrenderRelations();
+  const sol=document.getElementById('dgSolution'); if(sol) sol.innerHTML='';
+}
+function DGrenderAttrList(){
+  const box=document.getElementById('dgAttrList'); if(!box) return;
+  if(!DGS.attrs.length){ box.innerHTML=''; return; }
+  let h='<div class="label" style="margin-top:14px">Aktuelle Attribute <span class="hint" style="text-transform:none;letter-spacing:0">(✕ entfernt)</span></div><div class="chips" style="margin-top:8px">';
+  DGS.attrs.forEach(a=>{ h+='<span class="chip"><span>'+esc(a)+'</span> <span class="x" style="cursor:pointer;color:var(--ink-faint)" onclick="DGremoveAttr(\''+a.replace(/'/g,"\\'")+'\')">×</span></span>'; });
+  h+='</div>'; box.innerHTML=h;
+}
+/* FD-Ableitung aus Daten — Determinanten Größe 1 und 2 (wie im Prüfer) */
+function DGinferFDs(){
+  const A=DGS.attrs, data=DGS.rows; if(!data||!data.length){ DGS.fds=[]; return; }
+  const dets=[]; A.forEach(a=>dets.push([a]));
+  for(let i=0;i<A.length;i++)for(let j=i+1;j<A.length;j++)dets.push([A[i],A[j]]);
+  const found=[];
+  for(const det of dets){ for(const dep of A){
+    if(det.includes(dep)) continue;
+    if(found.some(f=>f.rhs[0]===dep && f.lhs.length<det.length && subsetArr(f.lhs,det))) continue;
+    if(holdsInData(det,dep,data)) found.push({lhs:det,rhs:[dep]});
+  }}
+  const g={}; found.forEach(f=>{const k=f.lhs.slice().sort().join(',');(g[k]=g[k]||{lhs:f.lhs,rhs:[]}).rhs.push(f.rhs[0]);});
+  DGS.fds=Object.values(g);
+}
+function DGrenderPreview(header){
+  const box=document.getElementById('dgPreview');
+  let h='<div class="L-prev"><table class="L-tbl"><tr>'+header.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr>';
+  DGS.rows.slice(0,5).forEach(r=>{ h+='<tr>'+header.map(c=>'<td>'+esc(r[c]||'')+'</td>').join('')+'</tr>'; });
+  h+='</table></div><p class="hint" style="margin-top:8px">'+header.length+' Spalten · '+DGS.rows.length+' Datenzeilen'+(DGS.rows.length?'':' · <b>keine Daten</b> — ohne Datenzeilen keine Abhängigkeiten').replace(' · ',' · ')+'</p>';
+  box.innerHTML=h;
+}
+
+/* ---------- Abhängigkeiten anzeigen / bearbeiten ---------- */
+function DGrenderFds(){
+  const box=document.getElementById('dgFdBox'); if(!DGS.attrs.length){box.innerHTML='';return;}
+  const keys=DGS.rows.length?candidateKeys(DGS.attrs,DGS.fds):[];
+  let h='<div class="label" style="margin-top:14px">Funktionale Abhängigkeiten <span class="hint" style="text-transform:none;letter-spacing:0">'+(DGS.rows.length?'(aus den Daten abgeleitet — Falsches mit ✕ abwählen, Fehlendes unten ergänzen)':'(selbst anlegen — Determinante anklicken, Ziel wählen, hinzufügen)')+'</span></div>';
+  h+='<div style="margin:8px 0">';
+  if(!DGS.fds.length){ h+='<span class="hint" style="font-style:italic">Keine Abhängigkeiten — lade Daten hoch oder ergänze unten manuell.</span>'; }
+  DGS.fds.forEach((f,i)=>{ h+='<div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:4px 6px 4px 0;font-family:var(--fmono);font-size:13px"><span>{'+f.lhs.join(', ')+'} → '+f.rhs.join(', ')+'</span><span class="x" style="cursor:pointer;color:var(--ink-faint);font-weight:700" onclick="DGremoveFd('+i+')">×</span></div>'; });
+  h+='</div>';
+  // Add-Formular
+  h+='<div style="background:var(--surface);border:1px dashed var(--line);border-radius:9px;padding:11px 13px;margin-top:6px">';
+  h+='<div class="hint" style="margin-bottom:7px">Abhängigkeit hinzufügen — Determinante anklicken, Ziel wählen:</div><div class="chips" style="margin-bottom:8px">';
+  DGS.attrs.forEach(a=>{ const on=DGS._nl.includes(a); h+='<span class="chip'+(on?' sel':'')+'" style="cursor:pointer" onclick="DGtoggleLhs(\''+a.replace(/'/g,"\\\\'")+'\')">'+esc(a)+'</span>'; });
+  h+='</div><div class="row" style="align-items:center;gap:8px"><span class="hint">→</span><select id="dgRhs" style="max-width:200px">'+DGS.attrs.map(a=>'<option value="'+esc(a)+'">'+esc(a)+'</option>').join('')+'</select><button class="btn btn-g btn-sm" onclick="DGaddFd()">+ hinzufügen</button></div></div>';
+  if(DGS.attrs.length) h+='<div class="infoline" style="margin-top:10px"><b>Schlüsselkandidat(en) laut aktuellen Abhängigkeiten:</b> '+keys.map(k=>'{'+k.join(', ')+'}').join('  ·  ')+'</div>';
+  box.innerHTML=h;
+}
+function DGtoggleLhs(a){ const i=DGS._nl.indexOf(a); if(i<0)DGS._nl.push(a); else DGS._nl.splice(i,1); DGrenderFds(); }
+function DGaddFd(){
+  const rhs=document.getElementById('dgRhs').value;
+  if(!DGS._nl.length||!rhs||DGS._nl.includes(rhs)){ return; }
+  const k=DGS._nl.slice().sort().join(',');
+  let g=DGS.fds.find(f=>f.lhs.slice().sort().join(',')===k);
+  if(g){ if(!g.rhs.includes(rhs)) g.rhs.push(rhs); } else { DGS.fds.push({lhs:[...DGS._nl],rhs:[rhs]}); }
+  DGS._nl=[]; document.getElementById('dgSolution').innerHTML=''; DGrenderFds();
+}
+function DGremoveFd(i){ DGS.fds.splice(i,1); document.getElementById('dgSolution').innerHTML=''; DGrenderFds(); }
+
+/* ---------- Zielnormalform ---------- */
+function DGrenderNfbtns(){
+  const box=document.getElementById('dgNfbtns'); box.innerHTML='';
+  DG_NF.forEach(nf=>{ const b=document.createElement('button'); b.className='L-nfbtn'+(DGS.target===nf?' on':''); b.textContent=nf;
+    if(DGS.target===nf){ b.style.background=DG_COL[nf]; b.style.borderColor=DG_COL[nf]; }
+    b.onclick=()=>{ DGS.target=nf; DGrenderNfbtns(); document.getElementById('dgSolution').innerHTML=''; }; box.appendChild(b); });
+}
+
+/* ---------- Attribut-Pool & Relationen ---------- */
+function DGrenderPool(){
+  const box=document.getElementById('dgPool'); box.innerHTML='';
+  if(!DGS.attrs.length){ box.innerHTML='<span class="hint" style="font-style:italic">Erst oben Attribute anlegen (oder eine Tabelle hochladen).</span>'; return; }
+  DGS.attrs.forEach(a=>{ const c=document.createElement('span'); c.className='chip'; c.textContent=a; c.onclick=()=>DGaddAttr(a); box.appendChild(c); });
+}
+function DGaddAttr(name){
+  if(!DGS.sel){ if(DGS.relations.length) DGS.sel=DGS.relations[DGS.relations.length-1].id; else { DGaddRelation(); } }
+  const r=DGS.relations.find(x=>x.id===DGS.sel); if(r&&!r.attrs.some(a=>a.name===name)) r.attrs.push({name,key:false}); DGrenderRelations();
+}
+function DGaddRelation(){ const id=++DGS.relSeq; DGS.relations.push({id,name:'Relation '+(DGS.relations.length+1),attrs:[]}); DGS.sel=id; DGrenderRelations(); }
+function DGselRel(id){ DGS.sel=id; DGrenderRelations(); }
+function DGclear(){ DGS.relations=[]; DGS.sel=null; document.getElementById('dgCheckResult').innerHTML=''; DGrenderRelations(); }
+function DGrenderRelations(){
+  const box=document.getElementById('dgRelGrid'); box.innerHTML='';
+  DGS.relations.forEach(r=>{
+    const card=document.createElement('div'); card.className='relcard'+(DGS.sel===r.id?' sel':'');
+    card.onclick=(e)=>{ if(e.target.tagName!=='INPUT'&&!e.target.classList.contains('x')&&!e.target.classList.contains('rdel')) DGselRel(r.id); };
+    const head=document.createElement('div'); head.className='rh';
+    const inp=document.createElement('input'); inp.value=r.name; inp.onchange=()=>{r.name=inp.value;};
+    const del=document.createElement('span'); del.className='rdel'; del.textContent='×'; del.onclick=()=>{ DGS.relations=DGS.relations.filter(x=>x.id!==r.id); if(DGS.sel===r.id)DGS.sel=null; DGrenderRelations(); };
+    head.appendChild(inp); head.appendChild(del); card.appendChild(head);
+    if(!r.attrs.length){ const e=document.createElement('div'); e.className='empty'; e.textContent='leer — Attribut oben anklicken'; card.appendChild(e); }
+    else{ const ch=document.createElement('div'); ch.className='chips';
+      r.attrs.forEach(a=>{ const el=document.createElement('span'); el.className='chip'+(a.key?' pk':'');
+        el.innerHTML='<span>'+esc(a.name)+(a.key?' 🔑':'')+'</span><span class="x">×</span>';
+        el.querySelector('span').onclick=(ev)=>{ev.stopPropagation();a.key=!a.key;DGrenderRelations();};
+        el.querySelector('.x').onclick=(ev)=>{ev.stopPropagation();r.attrs=r.attrs.filter(x=>x.name!==a.name);DGrenderRelations();}; ch.appendChild(el); });
+      card.appendChild(ch); }
+    box.appendChild(card);
+  });
+}
+
+/* ---------- Musterlösung (genau die gewählte Ziel-NF) ---------- */
+function DGnameFor(attrs,key,i){ return (key&&key.length===1)?String(key[0]):'R'+(i+1); }
+/* ===== Datenbasierte Verbund-Abhängigkeit (Join Dependency) für 4NF/5NF ===== */
+function DGtupKey(t,attrs){ return attrs.map(a=>String(t[a])).join('\u0001'); }
+function DGproject(rows,attrs){ const seen=new Set(),out=[]; for(const r of rows){ const t={}; attrs.forEach(a=>t[a]=r[a]); const k=DGtupKey(t,attrs); if(!seen.has(k)){seen.add(k);out.push(t);} } return out; }
+function DGnatJoin(A,aAttrs,B,bAttrs){ const sh=aAttrs.filter(a=>bAttrs.includes(a)); const out=[]; for(const x of A){ for(const y of B){ if(sh.every(k=>String(x[k])===String(y[k]))) out.push(Object.assign({},x,y)); } } return out; }
+/* Verlustfreier Verbund über die DATEN: stimmt der Verbund der Projektionen exakt mit der Tabelle überein? */
+function DGdataLossless(rows,relsList){
+  if(!rows||!rows.length||!relsList.length) return null;
+  let cur=DGproject(rows,relsList[0]), curAttrs=[...relsList[0]];
+  for(let i=1;i<relsList.length;i++){ cur=DGnatJoin(cur,curAttrs,DGproject(rows,relsList[i]),relsList[i]); curAttrs=[...new Set([...curAttrs,...relsList[i]])];
+    if(cur.length>5000) break; }
+  const all=[...new Set(relsList.flat())];
+  const cs=new Set(); cur.forEach(t=>cs.add(DGtupKey(t,all)));
+  const os=new Set(); rows.forEach(r=>os.add(DGtupKey(r,all)));
+  if(cs.size!==os.size) return false;
+  for(const k of cs) if(!os.has(k)) return false;
+  return true;
+}
+/* Sucht eine nicht-triviale, NICHT durch Schlüssel implizierte Verbund-Abhängigkeit (jede Teilrelation müsste sonst Superschlüssel sein) */
+function DGfindJD(attrs,rows,fds){
+  if(attrs.length<3 || attrs.length>7 || !rows || !rows.length) return null;
+  const allSuper=parts=>parts.every(p=>isSuperkey(p,attrs,fds));
+  const subs=properNonEmptySubsets(attrs);
+  // 1) Zerlegung in alle (n-1)-Teilmengen (deckt das klassische 3-Wege-Beispiel ab)
+  const nm1=subs.filter(x=>x.length===attrs.length-1);
+  if(nm1.length>=2 && DGdataLossless(rows,nm1) && !allSuper(nm1)) return nm1;
+  // 2) binäre Zerlegungen mit Überlappung (MVD-artig)
+  for(const S1 of subs){ if(S1.length<2) continue;
+    const rest=attrs.filter(a=>!S1.includes(a)); if(!rest.length) continue;
+    for(const ov of nonEmptySubsets(S1)){ const S2=[...new Set([...rest,...ov])];
+      if(S2.length>=attrs.length) continue;
+      if(DGdataLossless(rows,[S1,S2])===true && !allSuper([S1,S2])) return [S1,S2];
+    }
+  }
+  return null;
+}
+/* 5NF-Zerlegung anhand der Daten: ab BCNF starten und reduzierbare Relationen entlang gefundener JDs aufteilen */
+function DG5NFdecompose(attrs,rows,fds){
+  let rels=LBCNF(attrs,fds).map(r=>[...r.attrs]);
+  if(rows&&rows.length){ let changed=true,guard=0;
+    while(changed&&guard++<200){ changed=false;
+      for(let i=0;i<rels.length;i++){ const jd=DGfindJD(rels[i],DGproject(rows,rels[i]),fds);
+        if(jd){ rels.splice(i,1,...jd); changed=true; break; } }
+    }
+  }
+  const seen=new Set(); rels=rels.filter(r=>{const k=[...r].sort().join(',');if(seen.has(k))return false;seen.add(k);return true;});
+  rels=rels.filter((r,i)=>!rels.some((o,j)=>i!==j&&r.every(a=>o.includes(a))&&(r.length<o.length||(r.length===o.length&&j<i))));
+  return rels.map(r=>({attrs:r,key:candidateKeys(r,fds)[0]}));
+}
+function DGviolJD(jd){
+  const join=jd.map(p=>'('+p.join(', ')+')').join(' ⋈ ');
+  const list=jd.map(p=>'('+p.join(', ')+')').join(', ');
+  return '<div class="L-viol"><div class="err"><span class="fl">Verletzte Regel · 5NF</span>Es gilt eine nicht-triviale <b>Verbund-Abhängigkeit</b>: die Relation ist gleich dem verlustfreien Verbund ihrer Projektionen <b>'+join+'</b> — und keine dieser Teilrelationen ist ein Schlüssel. Sie ist daher <b>nicht in 5NF</b>.</div><div class="fix"><span class="fl">💡 Lösung</span>Zerlege die Relation in '+list+'.</div></div>';
+}
+
+/* ===== Tabelle selbst eingeben (Gitter) → "Inhalte übernehmen" verarbeitet wie ein Upload ===== */
+const DGG={cols:['A','B','C'],rows:[['','',''],['','',''],['','','']]};
+function DGgridFromAttrs(){ if(DGS.attrs.length){ DGG.cols=[...DGS.attrs]; DGG.rows=DGG.rows.map(r=>DGG.cols.map((c,j)=>r[j]||'')); if(!DGG.rows.length) DGG.rows=[DGG.cols.map(()=>'')]; DGgridRender(); } }
+function DGgridRender(){
+  const w=document.getElementById('dgGridWrap'); if(!w) return;
+  const inS='width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-family:var(--fmono);font-size:12.5px;background:#fff';
+  let h='<table class="L-tbl" style="margin-top:8px;min-width:'+(DGG.cols.length*120+40)+'px"><tr>';
+  DGG.cols.forEach((c,j)=>{ h+='<th style="padding:4px;vertical-align:top"><input value="'+esc(c)+'" oninput="DGG.cols['+j+']=this.value" placeholder="Spalte" style="'+inS+';font-weight:600">'+(DGG.cols.length>1?'<div style="text-align:right;margin-top:3px"><span class="x" style="cursor:pointer;color:var(--ink-faint);font-size:11px" onclick="DGgridDelCol('+j+')">✕ Spalte</span></div>':'')+'</th>'; });
+  h+='<th style="width:1px"></th></tr>';
+  DGG.rows.forEach((r,i)=>{ h+='<tr>'; DGG.cols.forEach((c,j)=>{ h+='<td style="padding:2px"><input value="'+esc(r[j]!==undefined?r[j]:'')+'" oninput="DGG.rows['+i+']['+j+']=this.value" style="'+inS+'"></td>'; }); h+='<td style="text-align:center"><span class="x" style="cursor:pointer;color:var(--ink-faint)" onclick="DGgridDelRow('+i+')">✕</span></td></tr>'; });
+  h+='</table>'; w.innerHTML=h;
+}
+function DGgridAddRow(){ DGG.rows.push(DGG.cols.map(()=>'')); DGgridRender(); }
+function DGgridAddCol(){ DGG.cols.push('Spalte '+(DGG.cols.length+1)); DGG.rows.forEach(r=>r.push('')); DGgridRender(); }
+function DGgridDelRow(i){ DGG.rows.splice(i,1); if(!DGG.rows.length) DGG.rows=[DGG.cols.map(()=>'')]; DGgridRender(); }
+function DGgridDelCol(j){ if(DGG.cols.length<=1) return; DGG.cols.splice(j,1); DGG.rows.forEach(r=>r.splice(j,1)); DGgridRender(); }
+function DGgridApply(){
+  const er=document.getElementById('dgErr'); if(er) er.textContent='';
+  const idx=[],cols=[]; DGG.cols.forEach((c,j)=>{ const n=String(c).trim(); if(n){idx.push(j);cols.push(n);} });
+  if(!cols.length){ if(er) er.textContent='Bitte mindestens eine Spalte benennen.'; return; }
+  if(new Set(cols).size!==cols.length){ if(er) er.textContent='Spaltennamen müssen eindeutig sein.'; return; }
+  const rows=DGG.rows.map(r=>idx.map(j=>r[j]!==undefined?String(r[j]):'')).filter(r=>r.some(v=>v.trim()!==''));
+  DGparse([cols, ...rows]);
+  const fn=document.getElementById('dgFileName'); if(fn) fn.textContent='✓ eigene Tabelle übernommen ('+rows.length+' Zeilen)';
+  const bc=document.getElementById('dgBuildCard'); if(bc) bc.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function DGsolRels(){
+  const A=DGS.attrs, fds=DGS.fds, nf=DGS.target;
+  if(nf==='1NF') return {intro:'1NF: atomare Werte, eine Relation mit Schlüssel:', rels:[{attrs:[...A],key:candidateKeys(A,fds)[0]}]};
+  if(nf==='2NF') return {intro:'2NF — partielle Abhängigkeiten in eigene Relationen ausgelagert:', rels:L2NF(A,fds)};
+  if(nf==='3NF') return {intro:'3NF — Synthese über die kanonische Überdeckung:', rels:L3NF(A,fds)};
+  if(nf==='BCNF') return {intro:'BCNF — Dekomposition (jede Determinante wird Schlüssel):', rels:LBCNF(A,fds)};
+  if(nf==='4NF') return {intro:'4NF — nach BCNF entstehen nur binäre/einfache Relationen:', rels:L4NF(A,fds,[])};
+  // 5NF: Verbund-Abhängigkeiten erfordern Daten
+  if(DGS.rows&&DGS.rows.length) return {intro:'5NF — Verbund-Abhängigkeiten anhand der Daten aufgelöst (jede Relation ist verbund-irreduzibel):', rels:DG5NFdecompose(A,DGS.rows,fds)};
+  return {intro:'5NF — ohne Daten nur bis BCNF/4NF auflösbar. Fülle unten eine Tabelle aus, damit Verbund-Abhängigkeiten (Join Dependencies) erkannt werden können:', rels:L4NF(A,fds,[])};
+}
+function DGshowSolution(){
+  const sol=document.getElementById('dgSolution');
+  if(!DGS.attrs.length){ sol.innerHTML='<div class="infoline">Erst oben eine Tabelle hochladen.</div>'; return; }
+  if(!DGS.fds.length && !(DGS.rows&&DGS.rows.length)){ sol.innerHTML='<div class="infoline">Es sind keine Abhängigkeiten/Daten bekannt — lade eine Tabelle <b>mit Daten</b> hoch, fülle unten eine Tabelle aus, oder ergänze Abhängigkeiten oben.</div>'; return; }
+  const {intro,rels}=DGsolRels();
+  let h='<div class="L-sol"><h4>Musterlösung für '+DGS.target+'</h4><p class="intro">'+intro+'</p><div class="relgrid">';
+  rels.forEach((r,i)=>{ const nm=DGnameFor(r.attrs,r.key,i);
+    h+='<div class="relcard ro"><div class="rh"><span class="rn">'+esc(nm)+'</span></div><div class="chips">'+r.attrs.map(a=>'<span class="chip'+((r.key||[]).includes(a)?' pk':'')+'">'+esc(a)+((r.key||[]).includes(a)?' 🔑':'')+'</span>').join('')+'</div></div>'; });
+  h+='</div><div class="row" style="margin-top:14px"><button class="btn btn-g btn-sm" onclick="DGapplySolution()">In meinen Editor übernehmen</button></div></div>';
+  sol.innerHTML=h; DGS._sol=rels;
+}
+function DGapplySolution(){ if(!DGS._sol)return; DGS.relations=DGS._sol.map((r,i)=>({id:++DGS.relSeq,name:DGnameFor(r.attrs,r.key,i),attrs:r.attrs.map(a=>({name:a,key:(r.key||[]).includes(a)}))})); DGS.sel=null; DGrenderRelations(); }
+
+/* ---------- Prüfen (welche Relation welchen Fehler hat) ---------- */
+function DGcheck(){
+  const box=document.getElementById('dgCheckResult');
+  if(!DGS.attrs.length){ box.innerHTML='<div class="infoline">Erst oben eine Tabelle hochladen.</div>'; return; }
+  if(!DGS.relations.length){ box.innerHTML='<div class="infoline">Lege mindestens eine Relation an und verteile die Attribute.</div>'; return; }
+  if(!DGS.fds.length && !(DGS.rows&&DGS.rows.length)){ box.innerHTML='<div class="infoline">Ohne Abhängigkeiten oder Daten ist keine sinnvolle Prüfung möglich — Tabelle hochladen/ausfüllen oder Abhängigkeiten oben ergänzen.</div>'; return; }
+  const R=DGS.attrs, fds=DGS.fds, nf=DGS.target;
+  const rels=DGS.relations.map(r=>r.attrs.map(a=>a.name));
+  const missing=R.filter(a=>!rels.some(rr=>rr.includes(a)));
+  let lossless; if(nf==='1NF') lossless=true; else if(DGS.rows&&DGS.rows.length){ const d=DGdataLossless(DGS.rows,rels); lossless=(d===null)?LlosslessMVD(R,rels,fds,[]):d; } else lossless=LlosslessMVD(R,rels,fds,[]);
+  const dataMode=!!(DGS.rows&&DGS.rows.length);
+  let allOk=!missing.length&&lossless, html='';
+  DGS.relations.forEach(r=>{
+    const A=r.attrs.map(a=>a.name); if(!A.length) return;
+    const keys=candidateKeys(A,fds), prime=primeSet(A,keys); let viols=[];
+    if(nf==='2NF') viols=test2NF(A,fds,keys,prime).map(v=>({v,rule:'2NF'}));
+    else if(nf==='3NF'){ const v2=test2NF(A,fds,keys,prime); viols=v2.length?v2.map(v=>({v,rule:'2NF'})):test3NF(A,fds,keys,prime).map(v=>({v,rule:'3NF'})); }
+    else if(nf==='BCNF') viols=testBCNF(A,fds,keys).map(v=>({v,rule:'BCNF'}));
+    else if(nf==='4NF'){ const vb=testBCNF(A,fds,keys); viols=vb.length?vb.map(v=>({v,rule:'BCNF'})):Ltest4NF(A,fds,[],keys).map(v=>({v,rule:'4NF'})); }
+    else if(nf==='5NF'){ const vb=testBCNF(A,fds,keys);
+      if(vb.length) viols=vb.map(v=>({v,rule:'BCNF'}));
+      else if(dataMode){ const jd=DGfindJD(A,DGproject(DGS.rows,A),fds); if(jd) viols=[{rule:'5NF',jd:jd}]; }
+      else viols=Ltest4NF(A,fds,[],keys).map(v=>({v,rule:'4NF'})); }
+    const okR=viols.length===0; if(!okR)allOk=false;
+    const col=okR?'var(--green)':'var(--red)';
+    html+='<div style="border-left:4px solid '+col+';background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin:10px 0"><div style="font-family:var(--fdisp);font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+(okR?'✓':'✗')+' '+esc(r.name)+' <span class="L-badge '+(okR?'ok':'no')+'">'+(okR?'in '+nf:nf+' verletzt')+'</span></div><div style="font-family:var(--fmono);font-size:12px;color:var(--ink-faint);margin:6px 0">Attribute: '+A.join(', ')+' · Schlüssel: '+keys.map(k=>'{'+k.join(', ')+'}').join(' · ')+'</div>';
+    viols.forEach(x=>{ html+=(x.rule==='5NF')?DGviolJD(x.jd):Lviol(x.rule,x.v); });
+    html+='</div>';
+  });
+  const valid=allOk&&!missing.length&&lossless;
+  let top = valid
+    ? '<div class="verdict ok"><div class="icon">✓</div><div class="body"><div class="title">Deine Zerlegung erfüllt die '+nf+'.</div><div class="desc">Alle Relationen bestehen den Test'+(nf!=='1NF'?' und die Zerlegung ist verlustfrei.':'.')+'</div></div></div>'
+    : '<div class="verdict bad"><div class="icon">✗</div><div class="body"><div class="title">Noch nicht in '+nf+'.</div><div class="desc">'+[missing.length?missing.length+' Attribut(e) fehlen':'',(!allOk&&!missing.length)?'eine Relation verletzt die Regeln':'',(nf!=='1NF'&&!lossless)?'die Zerlegung ist verlustbehaftet':''].filter(Boolean).join(' · ')+'</div></div></div>';
+  if(missing.length) top+='<div class="L-viol"><div class="err"><span class="fl">Verletzte Regel</span>Diese Attribute fehlen in jeder Relation: <b>'+missing.join(', ')+'</b></div><div class="fix"><span class="fl">💡 Lösung</span>Jedes Attribut muss in mindestens einer Relation vorkommen.</div></div>';
+  if(nf!=='1NF'&&!lossless) top+='<div class="L-viol"><div class="err"><span class="fl">Verletzte Regel</span>Die Zerlegung ist <b>verlustbehaftet</b> — beim Verbund (Join) entstehen Scheintupel.</div><div class="fix"><span class="fl">💡 Lösung</span>Beim datenbasierten Test muss der Verbund der Projektionen exakt die Ausgangstabelle ergeben (bei FD-basiertem Test: gemeinsame Attribute müssen in einer Relation Schlüssel sein).</div></div>';
+  if(nf==='5NF'&&!dataMode) top+='<div class="infoline" style="margin-top:8px">Hinweis: Verbund-Abhängigkeiten (Join Dependencies) lassen sich nur anhand von <b>Daten</b> sicher prüfen. Fülle unten eine Tabelle aus und übernimm sie, dann wird die 5NF korrekt geprüft.</div>';
+  box.innerHTML=top+html; box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+DGgridRender();
+</script>
+</body>
+</html>
